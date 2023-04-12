@@ -94,6 +94,11 @@ export const systemUserUpdateSchema = {
       description: "The system-updatable fields of the user object",
       properties: {
         features: appFeaturesSchema,
+        email: {
+          type: "string",
+          format: "email",
+          description: "The login email for the user. Not for public display",
+        },
       },
     },
   ],
@@ -112,11 +117,6 @@ export const userSchema = {
           type: "string",
           format: "uuid",
           description: "This corresponds to the user's id in the IDP",
-        },
-        email: {
-          type: "string",
-          format: "email",
-          description: "The login email for the user. Not for public display",
         },
       },
     },

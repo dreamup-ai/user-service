@@ -20,9 +20,11 @@
     "fastify": "^4.15.0",
     "interfaces": "github:dreamup-ai/interfaces",
     "json-schema-to-ts": "^2.7.2",
-    "queue-sqs": "github:dreamup-ai/queue-sqs"
+    "queue-sqs": "github:dreamup-ai/queue-sqs",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@types/node": "^18.15.11"
+    "@types/node": "^18.15.11",
+    "@types/uuid": "^9.0.1"
   }
 }
