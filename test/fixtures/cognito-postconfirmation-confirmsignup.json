@@ -1,0 +1,21 @@
+{
+  "version": "1",
+  "region": "us-east-1",
+  "userPoolId": "us-east-1_b2mOSFy2X",
+  "userName": "6046136a-0d8b-4c59-829c-769826ddbbe7",
+  "callerContext": {
+    "awsSdkVersion": "aws-sdk-unknown-unknown",
+    "clientId": "7kbvmaquil1c9u598hoglehc4o"
+  },
+  "triggerSource": "PostConfirmation_ConfirmSignUp",
+  "request": {
+    "userAttributes": {
+      "sub": "6046136a-0d8b-4c59-829c-769826ddbbe7",
+      "email_verified": "true",
+      "cognito:user_status": "CONFIRMED",
+      "cognito:email_alias": "shawn.rushefsky+test3@gmail.com",
+      "email": "shawn.rushefsky+test3@gmail.com"
+    }
+  },
+  "response": {}
+}

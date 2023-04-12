@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npm run build && mocha --require test/env.js",
     "build": "tsc",
-    "start": "npm run build && node src/index.js"
+    "start": "npm run build && node src/index.js",
+    "compile-schemas": "json2ts -i src/schemas -o src/ctypes.ts -p -s"
   },
   "repository": {
     "type": "git",
@@ -24,6 +25,7 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.1",
     "@types/node": "^18.15.11",
     "@types/uuid": "^9.0.1"
   }
