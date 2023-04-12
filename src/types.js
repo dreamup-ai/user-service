@@ -95,12 +95,32 @@ exports.userSchema = {
         {
             type: "object",
             description: "The User object",
-            required: ["id"],
+            required: ["id", "created"],
             properties: {
                 id: {
                     type: "string",
                     format: "uuid",
                     description: "This corresponds to the user's id in the IDP",
+                },
+                created: {
+                    type: "integer",
+                    description: "The unix timestamp in ms of when the user was created",
+                },
+                updated: {
+                    type: "integer",
+                    description: "The unix timestamp in ms of when the user was last updated",
+                },
+                "idp:cognito": {
+                    type: "object",
+                    description: "The user's IDP data",
+                    properties: {
+                        userPoolId: {
+                            type: "string",
+                        },
+                        userId: {
+                            type: "string",
+                        },
+                    },
                 },
             },
         },

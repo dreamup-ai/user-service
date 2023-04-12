@@ -4,7 +4,7 @@
   "description": "A service for managing users and user sessions in dreamup ai",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run build && mocha --require test/env.js",
+    "test": "npm run build && mocha --require test/env.js --recursive test",
     "build": "tsc",
     "start": "npm run build && node src/index.js",
     "compile-schemas": "json2ts -i src/schemas -o src/ctypes.ts -p -s"
@@ -26,8 +26,15 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.4",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/mocha": "^10.0.1",
     "@types/node": "^18.15.11",
-    "@types/uuid": "^9.0.1"
+    "@types/sinon": "^10.0.13",
+    "@types/uuid": "^9.0.1",
+    "chai": "^4.3.7",
+    "dynamo-tools": "github:shawnrushefsky/dynamo-tools",
+    "mocha": "^10.2.0",
+    "sinon": "^15.0.3"
   }
 }

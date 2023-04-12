@@ -12,25 +12,30 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.cognito = void 0;
 const db_dynamo_1 = require("db-dynamo");
 const queue_sqs_1 = require("queue-sqs");
 const types_1 = require("../types");
 const uuid_1 = require("uuid");
-const fs_1 = __importDefault(require("fs"));
+const node_fs_1 = __importDefault(require("node:fs"));
 const node_assert_1 = __importDefault(require("node:assert"));
 const node_crypto_1 = __importDefault(require("node:crypto"));
 const { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand, } = require("@aws-sdk/client-cognito-identity-provider");
-const { COGNITO_USER_POOL_ID, PUBLIC_KEY_PATH, SD_Q_PREFIX = "sd-jobs_", AWS_REGION, AWS_DEFAULT_REGION, } = process.env;
-const cognito = new CognitoIdentityProviderClient({
+const { COGNITO_USER_POOL_ID, PUBLIC_KEY_PATH, SD_Q_PREFIX = "sd-jobs_", AWS_REGION, AWS_DEFAULT_REGION, COGNITO_IDP_ENDPOINT, USER_TABLE, } = process.env;
+exports.cognito = new CognitoIdentityProviderClient({
     region: AWS_REGION || AWS_DEFAULT_REGION,
+    endpoint: COGNITO_IDP_ENDPOINT,
 });
 (0, node_assert_1.default)(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
 (0, node_assert_1.default)(PUBLIC_KEY_PATH, "PUBLIC_KEY_PATH is required");
-const publicKey = fs_1.default.readFileSync(PUBLIC_KEY_PATH);
+(0, node_assert_1.default)(USER_TABLE, "USER_TABLE is required");
+const rawPublicKey = node_fs_1.default.readFileSync(PUBLIC_KEY_PATH, "utf8");
+const publicKey = node_crypto_1.default.createPublicKey(rawPublicKey);
 const queueManager = new queue_sqs_1.QueueManager();
-const userTable = new db_dynamo_1.DatabaseTable("users");
+const userTable = new db_dynamo_1.DatabaseTable(USER_TABLE);
 function routes(server) {
     return __awaiter(this, void 0, void 0, function* () {
+        yield userTable.connect();
         server.post("/user/cognito", {
             schema: {
                 body: types_1.cognitoNewUserPayloadSchema,
@@ -78,6 +83,7 @@ function routes(server) {
                 },
                 preferences: {},
                 features: {},
+                created: Date.now(),
             };
             try {
                 const [created, queue, cog] = yield Promise.all([
@@ -86,7 +92,7 @@ function routes(server) {
                     // Create the user's queue
                     queueManager.createQueue(`${SD_Q_PREFIX}${user.id}`),
                     // Update the user's attributes in the idp
-                    cognito.send(new AdminUpdateUserAttributesCommand({
+                    exports.cognito.send(new AdminUpdateUserAttributesCommand({
                         UserPoolId: userPoolId,
                         Username: sub,
                         UserAttributes: [
@@ -100,6 +106,7 @@ function routes(server) {
                 return res.status(201).send(created);
             }
             catch (e) {
+                console.error(e);
                 return res.status(500).send({
                     error: e.message,
                 });

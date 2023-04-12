@@ -9,7 +9,7 @@ import {
   cognitoNewUserPayloadSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import fs from "fs";
+import fs from "node:fs";
 import assert from "node:assert";
 import crypto from "node:crypto";
 const {
@@ -23,21 +23,27 @@ const {
   SD_Q_PREFIX = "sd-jobs_",
   AWS_REGION,
   AWS_DEFAULT_REGION,
+  COGNITO_IDP_ENDPOINT,
+  USER_TABLE,
 } = process.env;
 
-const cognito = new CognitoIdentityProviderClient({
+export const cognito = new CognitoIdentityProviderClient({
   region: AWS_REGION || AWS_DEFAULT_REGION,
+  endpoint: COGNITO_IDP_ENDPOINT,
 });
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
 assert(PUBLIC_KEY_PATH, "PUBLIC_KEY_PATH is required");
+assert(USER_TABLE, "USER_TABLE is required");
 
-const publicKey = fs.readFileSync(PUBLIC_KEY_PATH);
+const rawPublicKey = fs.readFileSync(PUBLIC_KEY_PATH, "utf8");
+const publicKey = crypto.createPublicKey(rawPublicKey);
 
 const queueManager = new QueueManager();
-const userTable = new DatabaseTable("users");
+const userTable = new DatabaseTable(USER_TABLE);
 
 async function routes(server: FastifyInstance) {
+  await userTable.connect();
   server.post<{
     Body: CognitoNewUserPayload;
     Headers: NewUserHeader;
@@ -104,6 +110,7 @@ async function routes(server: FastifyInstance) {
         },
         preferences: {},
         features: {},
+        created: Date.now(),
       };
       try {
         const [created, queue, cog] = await Promise.all([
@@ -130,6 +137,7 @@ async function routes(server: FastifyInstance) {
 
         return res.status(201).send(created);
       } catch (e: any) {
+        console.error(e);
         return res.status(500).send({
           error: e.message,
         });
