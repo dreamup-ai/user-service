@@ -1,0 +1,24 @@
+{
+  "name": "user-service",
+  "version": "1.0.0",
+  "description": "A service for managing users and user sessions in dreamup ai",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "npm run build && mocha --require test/env.js",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "github.com/dreamup-ai/user-service"
+  },
+  "author": "Shawn Rushefsky",
+  "license": "MIT",
+  "dependencies": {
+    "db-dynamo": "github:dreamup-ai/db-dynamo",
+    "interfaces": "github:dreamup-ai/interfaces",
+    "queue-sqs": "github:dreamup-ai/queue-sqs"
+  },
+  "devDependencies": {
+    "@types/node": "^18.15.11"
+  }
+}
