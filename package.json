@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "test": "npm run build && mocha --require test/env.js",
-    "build": "tsc"
+    "build": "tsc",
+    "start": "npm run build && node src/index.js"
   },
   "repository": {
     "type": "git",
@@ -14,6 +15,7 @@
   "author": "Shawn Rushefsky",
   "license": "MIT",
   "dependencies": {
+    "@fastify/type-provider-json-schema-to-ts": "^2.2.2",
     "db-dynamo": "github:dreamup-ai/db-dynamo",
     "fastify": "^4.15.0",
     "interfaces": "github:dreamup-ai/interfaces",
