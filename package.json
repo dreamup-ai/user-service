@@ -15,7 +15,9 @@
   "license": "MIT",
   "dependencies": {
     "db-dynamo": "github:dreamup-ai/db-dynamo",
+    "fastify": "^4.15.0",
     "interfaces": "github:dreamup-ai/interfaces",
+    "json-schema-to-ts": "^2.7.2",
     "queue-sqs": "github:dreamup-ai/queue-sqs"
   },
   "devDependencies": {
