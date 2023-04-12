@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.paginationTokenSchema = exports.errorResponseSchema = exports.deletedResponseSchema = exports.userSchema = exports.systemUserUpdateSchema = exports.appFeaturesSchema = exports.userUpdateSchema = exports.usernameSchema = exports.userPreferencesSchema = exports.initialDimensionsSchema = void 0;
+exports.newUserHeaderSchema = exports.cognitoNewUserPayloadSchema = exports.paginationTokenSchema = exports.errorResponseSchema = exports.deletedResponseSchema = exports.userSchema = exports.systemUserUpdateSchema = exports.appFeaturesSchema = exports.userUpdateSchema = exports.usernameSchema = exports.userPreferencesSchema = exports.initialDimensionsSchema = void 0;
 exports.initialDimensionsSchema = {
     type: "object",
     properties: {
@@ -77,8 +77,14 @@ exports.systemUserUpdateSchema = {
         {
             type: "object",
             description: "The system-updatable fields of the user object",
+            required: ["email"],
             properties: {
                 features: exports.appFeaturesSchema,
+                email: {
+                    type: "string",
+                    format: "email",
+                    description: "The login email for the user. Not for public display",
+                },
             },
         },
     ],
@@ -89,16 +95,12 @@ exports.userSchema = {
         {
             type: "object",
             description: "The User object",
+            required: ["id"],
             properties: {
                 id: {
                     type: "string",
                     format: "uuid",
                     description: "This corresponds to the user's id in the IDP",
-                },
-                email: {
-                    type: "string",
-                    format: "email",
-                    description: "The login email for the user. Not for public display",
                 },
             },
         },
@@ -129,4 +131,91 @@ exports.paginationTokenSchema = {
     type: "string",
     description: "A token to be used in the next request to get the next page",
     nullable: true,
+};
+exports.cognitoNewUserPayloadSchema = {
+    type: "object",
+    properties: {
+        version: {
+            type: "string",
+        },
+        region: {
+            type: "string",
+        },
+        userPoolId: {
+            type: "string",
+        },
+        userName: {
+            type: "string",
+        },
+        callerContext: {
+            type: "object",
+            properties: {
+                awsSdkVersion: {
+                    type: "string",
+                },
+                clientId: {
+                    type: "string",
+                },
+            },
+            required: ["awsSdkVersion", "clientId"],
+        },
+        triggerSource: {
+            type: "string",
+        },
+        request: {
+            type: "object",
+            properties: {
+                userAttributes: {
+                    type: "object",
+                    properties: {
+                        sub: {
+                            type: "string",
+                        },
+                        email_verified: {
+                            type: "string",
+                        },
+                        "cognito:user_status": {
+                            type: "string",
+                        },
+                        "cognito:email_alias": {
+                            type: "string",
+                        },
+                        email: {
+                            type: "string",
+                        },
+                    },
+                    required: [
+                        "sub",
+                        "email_verified",
+                        "cognito:user_status",
+                        "cognito:email_alias",
+                        "email",
+                    ],
+                },
+            },
+            required: ["userAttributes"],
+        },
+        response: {
+            type: "object",
+        },
+    },
+    required: [
+        "version",
+        "region",
+        "userPoolId",
+        "userName",
+        "callerContext",
+        "triggerSource",
+        "request",
+        "response",
+    ],
+};
+exports.newUserHeaderSchema = {
+    type: "object",
+    properties: {
+        "x-idp-signature": {
+            type: "string",
+            description: "The signature of the payload",
+        },
+    },
 };

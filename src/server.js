@@ -12,26 +12,37 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.start = exports.server = void 0;
-const db_dynamo_1 = require("db-dynamo");
-const queue_sqs_1 = require("queue-sqs");
+exports.start = exports.build = void 0;
 const fastify_1 = __importDefault(require("fastify"));
-const queueManager = new queue_sqs_1.QueueManager();
-const userTable = new db_dynamo_1.DatabaseTable("users");
+const cognito_1 = __importDefault(require("./routes/cognito"));
 const { PORT } = process.env;
 const port = PORT ? parseInt(PORT, 10) : 3000;
-exports.server = (0, fastify_1.default)({
-    logger: true,
-}).withTypeProvider();
-exports.server.get("/hc", () => __awaiter(void 0, void 0, void 0, function* () {
-    return "OK";
-}));
-const start = () => __awaiter(void 0, void 0, void 0, function* () {
+const build = () => __awaiter(void 0, void 0, void 0, function* () {
+    const server = (0, fastify_1.default)({
+        logger: true,
+    }).withTypeProvider();
+    server.get("/hc", {
+        schema: {
+            response: {
+                200: {
+                    type: "string",
+                },
+            },
+        },
+    }, () => __awaiter(void 0, void 0, void 0, function* () {
+        return "OK";
+    }));
+    yield server.register(cognito_1.default);
+    return server;
+});
+exports.build = build;
+const start = (server) => __awaiter(void 0, void 0, void 0, function* () {
+    yield server.register(cognito_1.default);
     try {
-        yield exports.server.listen({ port });
+        yield server.listen({ port });
     }
     catch (e) {
-        exports.server.log.error(e);
+        server.log.error(e);
         process.exit(1);
     }
 });
