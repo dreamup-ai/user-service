@@ -6,17 +6,28 @@ import {
   User,
   CognitoNewUserPayload,
   NewUserHeader,
+  cognitoNewUserPayloadSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs";
 import assert from "node:assert";
 import crypto from "node:crypto";
+const {
+  CognitoIdentityProviderClient,
+  AdminUpdateUserAttributesCommand,
+} = require("@aws-sdk/client-cognito-identity-provider");
 
 const {
   COGNITO_USER_POOL_ID,
   PUBLIC_KEY_PATH,
   SD_Q_PREFIX = "sd-jobs_",
+  AWS_REGION,
+  AWS_DEFAULT_REGION,
 } = process.env;
+
+const cognito = new CognitoIdentityProviderClient({
+  region: AWS_REGION || AWS_DEFAULT_REGION,
+});
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
 assert(PUBLIC_KEY_PATH, "PUBLIC_KEY_PATH is required");
@@ -35,9 +46,7 @@ async function routes(server: FastifyInstance) {
     "/user/cognito",
     {
       schema: {
-        body: {
-          type: "string",
-        },
+        body: cognitoNewUserPayloadSchema,
         response: {
           201: userSchema,
         },
@@ -97,8 +106,28 @@ async function routes(server: FastifyInstance) {
         features: {},
       };
       try {
-        const created = await userTable.create(user);
-        await queueManager.createQueue(`${SD_Q_PREFIX}${user.id}`);
+        const [created, queue, cog] = await Promise.all([
+          // Create the user
+          userTable.create(user),
+
+          // Create the user's queue
+          queueManager.createQueue(`${SD_Q_PREFIX}${user.id}`),
+
+          // Update the user's attributes in the idp
+          cognito.send(
+            new AdminUpdateUserAttributesCommand({
+              UserPoolId: userPoolId,
+              Username: sub,
+              UserAttributes: [
+                {
+                  Name: "custom:dream_id",
+                  Value: user.id,
+                },
+              ],
+            })
+          ),
+        ]);
+
         return res.status(201).send(created);
       } catch (e: any) {
         return res.status(500).send({

@@ -16,6 +16,7 @@
   "author": "Shawn Rushefsky",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-cognito-identity-provider": "^3.310.0",
     "@fastify/type-provider-json-schema-to-ts": "^2.2.2",
     "db-dynamo": "github:dreamup-ai/db-dynamo",
     "fastify": "^4.15.0",
