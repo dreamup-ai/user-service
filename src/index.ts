@@ -1,2 +1,4 @@
-import { start } from "./server";
-start();
+import { start, build } from "./server";
+build().then((server) => {
+  start(server);
+});
