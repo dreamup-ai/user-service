@@ -15,9 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.start = exports.build = void 0;
 const fastify_1 = __importDefault(require("fastify"));
 const cognito_1 = __importDefault(require("./routes/cognito"));
-const { PORT } = process.env;
-const port = PORT ? parseInt(PORT, 10) : 3000;
-const build = () => __awaiter(void 0, void 0, void 0, function* () {
+const config_1 = __importDefault(require("./config"));
+const build = (userTable, queueManager) => __awaiter(void 0, void 0, void 0, function* () {
     const server = (0, fastify_1.default)({
         logger: true,
     }).withTypeProvider();
@@ -32,14 +31,14 @@ const build = () => __awaiter(void 0, void 0, void 0, function* () {
     }, () => __awaiter(void 0, void 0, void 0, function* () {
         return "OK";
     }));
-    yield server.register(cognito_1.default);
+    yield server.register(cognito_1.default, { userTable, queueManager });
     return server;
 });
 exports.build = build;
 const start = (server) => __awaiter(void 0, void 0, void 0, function* () {
     yield server.register(cognito_1.default);
     try {
-        yield server.listen({ port });
+        yield server.listen({ port: config_1.default.server.port });
     }
     catch (e) {
         server.log.error(e);

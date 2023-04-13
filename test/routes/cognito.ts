@@ -10,6 +10,12 @@ const sandbox = sinon.createSandbox();
 
 const { COGNITO_USER_POOL_ID } = process.env;
 
+import { DatabaseTable } from "db-dynamo";
+import { QueueManager } from "queue-sqs";
+
+const userTable = new DatabaseTable(process.env.USER_TABLE || "users");
+const queueManager = new QueueManager();
+
 const payload = () => {
   return JSON.parse(
     JSON.stringify({ ...cognitoPayload, userPoolId: COGNITO_USER_POOL_ID })
@@ -18,7 +24,8 @@ const payload = () => {
 
 let server: FastifyInstance;
 before(async () => {
-  server = await build();
+  await userTable.connect();
+  server = await build(userTable, queueManager);
   try {
     await createTable();
   } catch (e: any) {

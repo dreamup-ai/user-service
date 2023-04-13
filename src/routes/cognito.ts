@@ -1,5 +1,3 @@
-import { DatabaseTable } from "db-dynamo";
-import { QueueManager } from "queue-sqs";
 import { FastifyInstance } from "fastify";
 import {
   userSchema,
@@ -9,41 +7,26 @@ import {
   cognitoNewUserPayloadSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import fs from "node:fs";
-import assert from "node:assert";
 import crypto from "node:crypto";
+import { IDatabaseTable, IQueueManager } from "interfaces";
 const {
   CognitoIdentityProviderClient,
   AdminUpdateUserAttributesCommand,
 } = require("@aws-sdk/client-cognito-identity-provider");
-
-const {
-  COGNITO_USER_POOL_ID,
-  PUBLIC_KEY_PATH,
-  SD_Q_PREFIX = "sd-jobs_",
-  AWS_REGION,
-  AWS_DEFAULT_REGION,
-  COGNITO_IDP_ENDPOINT,
-  USER_TABLE,
-} = process.env;
+import config from "../config";
 
 export const cognito = new CognitoIdentityProviderClient({
-  region: AWS_REGION || AWS_DEFAULT_REGION,
-  endpoint: COGNITO_IDP_ENDPOINT,
+  region: config.aws.region,
+  endpoint: config.aws.endpoints.cognito,
 });
 
-assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
-assert(PUBLIC_KEY_PATH, "PUBLIC_KEY_PATH is required");
-assert(USER_TABLE, "USER_TABLE is required");
-
-const rawPublicKey = fs.readFileSync(PUBLIC_KEY_PATH, "utf8");
-const publicKey = crypto.createPublicKey(rawPublicKey);
-
-const queueManager = new QueueManager();
-const userTable = new DatabaseTable(USER_TABLE);
-
-async function routes(server: FastifyInstance) {
-  await userTable.connect();
+async function routes(
+  server: FastifyInstance,
+  {
+    userTable,
+    queueManager,
+  }: { userTable: IDatabaseTable; queueManager: IQueueManager }
+) {
   server.post<{
     Body: CognitoNewUserPayload;
     Headers: NewUserHeader;
@@ -73,7 +56,7 @@ async function routes(server: FastifyInstance) {
             error: "Invalid trigger source",
           });
         }
-        if (userPoolId !== COGNITO_USER_POOL_ID) {
+        if (userPoolId !== config.idp.cognito.userPoolId) {
           return res.status(400).send({
             error: "Invalid user pool ID",
           });
@@ -83,7 +66,7 @@ async function routes(server: FastifyInstance) {
         const isVerified = crypto.verify(
           "sha256",
           Buffer.from(JSON.stringify(req.body)),
-          publicKey,
+          config.idp.cognito.publicKey,
           Buffer.from(signature, "base64")
         );
         if (!isVerified) {
@@ -118,7 +101,7 @@ async function routes(server: FastifyInstance) {
           userTable.create(user),
 
           // Create the user's queue
-          queueManager.createQueue(`${SD_Q_PREFIX}${user.id}`),
+          queueManager.createQueue(`${config.queue.sd_prefix}${user.id}`),
 
           // Update the user's attributes in the idp
           cognito.send(

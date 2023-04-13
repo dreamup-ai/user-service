@@ -20,12 +20,17 @@ const cognito_payload_json_1 = __importDefault(require("../fixtures/cognito-payl
 const sinon_1 = __importDefault(require("sinon"));
 const sandbox = sinon_1.default.createSandbox();
 const { COGNITO_USER_POOL_ID } = process.env;
+const db_dynamo_1 = require("db-dynamo");
+const queue_sqs_1 = require("queue-sqs");
+const userTable = new db_dynamo_1.DatabaseTable(process.env.USER_TABLE || "users");
+const queueManager = new queue_sqs_1.QueueManager();
 const payload = () => {
     return JSON.parse(JSON.stringify(Object.assign(Object.assign({}, cognito_payload_json_1.default), { userPoolId: COGNITO_USER_POOL_ID })));
 };
 let server;
 before(() => __awaiter(void 0, void 0, void 0, function* () {
-    server = yield (0, server_1.build)();
+    yield userTable.connect();
+    server = yield (0, server_1.build)(userTable, queueManager);
     try {
         yield (0, util_1.createTable)();
     }
