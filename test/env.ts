@@ -6,7 +6,9 @@ Object.assign(process.env, {
   SQS_ENDPOINT: "http://localhost:4566/",
   COGNITO_IDP_ENDPOINT: "http://localhost:4566/",
   COGNITO_USER_POOL_ID: "us-east-1_123456789",
-  PUBLIC_KEY_PATH: "./test/fixtures/cognito_key.pub",
-  PRIVATE_KEY_PATH: "./test/fixtures/cognito_key",
+  COGNITO_PUBLIC_KEY_PATH: "./test/fixtures/cognito_key.pub",
+  COGNITO_PRIVATE_KEY_PATH: "./test/fixtures/cognito_key",
   USER_TABLE: "users",
+  WEBHOOK_PUBLIC_KEY_PATH: "./test/fixtures/webhook_key.pub",
+  WEBHOOK_PRIVATE_KEY_PATH: "./test/fixtures/webhook_key",
 });

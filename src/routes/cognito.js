@@ -16,9 +16,10 @@ exports.cognito = void 0;
 const types_1 = require("../types");
 const uuid_1 = require("uuid");
 const node_crypto_1 = __importDefault(require("node:crypto"));
-const { CognitoIdentityProviderClient, AdminUpdateUserAttributesCommand, } = require("@aws-sdk/client-cognito-identity-provider");
+const client_cognito_identity_provider_1 = require("@aws-sdk/client-cognito-identity-provider");
 const config_1 = __importDefault(require("../config"));
-exports.cognito = new CognitoIdentityProviderClient({
+const webhooks_1 = require("../webhooks");
+exports.cognito = new client_cognito_identity_provider_1.CognitoIdentityProviderClient({
     region: config_1.default.aws.region,
     endpoint: config_1.default.aws.endpoints.cognito,
 });
@@ -80,7 +81,7 @@ function routes(server, { userTable, queueManager, }) {
                     // Create the user's queue
                     queueManager.createQueue(`${config_1.default.queue.sd_prefix}${user.id}`),
                     // Update the user's attributes in the idp
-                    exports.cognito.send(new AdminUpdateUserAttributesCommand({
+                    exports.cognito.send(new client_cognito_identity_provider_1.AdminUpdateUserAttributesCommand({
                         UserPoolId: userPoolId,
                         Username: sub,
                         UserAttributes: [
@@ -91,10 +92,11 @@ function routes(server, { userTable, queueManager, }) {
                         ],
                     })),
                 ]);
+                (0, webhooks_1.sendWebhook)("user.created", { user: user.id }, server.log);
                 return res.status(201).send(created);
             }
             catch (e) {
-                console.error(e);
+                server.log.error(e);
                 return res.status(500).send({
                     error: e.message,
                 });

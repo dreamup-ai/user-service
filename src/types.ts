@@ -100,6 +100,25 @@ export const systemUserUpdateSchema = {
           format: "email",
           description: "The login email for the user. Not for public display",
         },
+        terms: {
+          type: "object",
+          description: "The user's terms of service acceptance",
+          properties: {
+            accepted: {
+              type: "boolean",
+              description: "Whether the user has accepted the terms",
+            },
+            accepted_at: {
+              type: "integer",
+              description:
+                "The unix timestamp in ms of when the user accepted the terms",
+            },
+            version: {
+              type: "string",
+              description: "The version of the terms the user accepted",
+            },
+          },
+        },
       },
     },
   ],
@@ -258,7 +277,6 @@ export const cognitoNewUserPayloadSchema = {
     "callerContext",
     "triggerSource",
     "request",
-    "response",
   ],
 } as const;
 

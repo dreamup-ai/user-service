@@ -7,7 +7,7 @@ import {
 } from "@aws-sdk/client-dynamodb";
 import { Cache } from "dynamo-tools";
 
-const { PRIVATE_KEY_PATH, AWS_REGION, DYNAMODB_ENDPOINT, USER_TABLE } =
+const { COGNITO_PRIVATE_KEY_PATH, AWS_REGION, DYNAMODB_ENDPOINT, USER_TABLE } =
   process.env;
 
 const cache = new Cache({
@@ -66,9 +66,11 @@ export const clearTable = async () => {
   await cache.deleteAll({ table: USER_TABLE });
 };
 
-assert(PRIVATE_KEY_PATH, "PRIVATE_KEY_PATH is required");
+assert(COGNITO_PRIVATE_KEY_PATH, "PRIVATE_KEY_PATH is required");
 
-const rawPrivateKey = fs.readFileSync(PRIVATE_KEY_PATH).toString("utf8");
+const rawPrivateKey = fs
+  .readFileSync(COGNITO_PRIVATE_KEY_PATH)
+  .toString("utf8");
 const privateKey = crypto.createPrivateKey(rawPrivateKey);
 
 export function sign(payload: string) {

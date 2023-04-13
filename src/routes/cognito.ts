@@ -9,11 +9,12 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import crypto from "node:crypto";
 import { IDatabaseTable, IQueueManager } from "interfaces";
-const {
+import {
   CognitoIdentityProviderClient,
   AdminUpdateUserAttributesCommand,
-} = require("@aws-sdk/client-cognito-identity-provider");
+} from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config";
+import { sendWebhook } from "../webhooks";
 
 export const cognito = new CognitoIdentityProviderClient({
   region: config.aws.region,
@@ -117,10 +118,10 @@ async function routes(
             })
           ),
         ]);
-
+        sendWebhook("user.created", { user: user.id }, server.log);
         return res.status(201).send(created);
       } catch (e: any) {
-        console.error(e);
+        server.log.error(e);
         return res.status(500).send({
           error: e.message,
         });
