@@ -4,10 +4,9 @@
   "description": "A service for managing users and user sessions in dreamup ai",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run build && APP_ENV=test mocha --require test/env.js --recursive test",
+    "test": "npm run build && APP_ENV=test mocha --require dist/test/env.js --recursive dist/test",
     "build": "tsc",
-    "start": "npm run build && APP_ENV=local node src/index.js",
-    "compile-schemas": "json2ts -i src/schemas -o src/ctypes.ts -p -s"
+    "start": "APP_ENV=local node dist/src/index.js"
   },
   "repository": {
     "type": "git",
