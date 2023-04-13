@@ -140,4 +140,30 @@ describe("POST /user/cognito", () => {
 
     expect(cognitoStub.calledOnce).to.be.true;
   });
+
+  it("should return 400 if user already exists", async () => {
+    const body = payload();
+    const initResp = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+      },
+      payload: body,
+    });
+    expect(initResp.statusCode).to.equal(201);
+
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+      },
+      payload: body,
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "User already exists",
+    });
+  });
 });

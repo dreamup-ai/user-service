@@ -2,18 +2,15 @@ import { FastifyInstance } from "fastify";
 import {
   userSchema,
   User,
-  CognitoNewUserPayload,
   NewUserHeader,
-  cognitoNewUserPayloadSchema,
   systemUserUpdateSchema,
   SystemUserUpdate,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import crypto from "node:crypto";
 import { IDatabaseTable, IQueueManager } from "interfaces";
-
 import config from "../config";
-import { sendWebhook } from "../webhooks";
+import { makeSourceValidator } from "../middleware/validate-source";
+import { createUser } from "../crud";
 
 const routes = async (
   server: FastifyInstance,
@@ -22,6 +19,10 @@ const routes = async (
     queueManager,
   }: { userTable: IDatabaseTable; queueManager: IQueueManager }
 ) => {
+  /**
+   * Create a new user. Only accepts input signed
+   * by the dreamup private key.
+   */
   server.post<{
     Body: SystemUserUpdate;
     Headers: NewUserHeader;
@@ -33,7 +34,37 @@ const routes = async (
         201: userSchema,
       },
     },
-    preValidation: async (req, res) => {},
-    handler: async (req, res) => {},
+    preValidation: makeSourceValidator(
+      config.webhooks.publicKey,
+      config.webhooks.header
+    ),
+    handler: async (req, res) => {
+      const { body } = req;
+      const id = uuidv4();
+      const user = {
+        id,
+        ...body,
+        created: Date.now(),
+        "idp:dreamup": {
+          id,
+        },
+      };
+      try {
+        const created = await createUser({
+          user,
+          userTable,
+          queueManager,
+          log: server.log,
+        });
+        return res.status(201).send(created);
+      } catch (e: any) {
+        server.log.error(e);
+        return res.status(500).send({
+          error: "Internal server error",
+        });
+      }
+    },
   });
 };
+
+export default routes;

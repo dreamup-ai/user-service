@@ -16,6 +16,7 @@ import {
 import config from "../config";
 import { sendWebhook } from "../webhooks";
 import { makeSourceValidator } from "../middleware/validate-source";
+import { createUser } from "../crud";
 
 export const cognito = new CognitoIdentityProviderClient({
   region: config.aws.region,
@@ -83,13 +84,13 @@ async function routes(
         created: Date.now(),
       };
       try {
-        const [created, queue, cog] = await Promise.all([
-          // Create the user
-          userTable.create(user),
-
-          // Create the user's queue
-          queueManager.createQueue(`${config.queue.sd_prefix}${user.id}`),
-
+        const [created, cog] = await Promise.all([
+          createUser({
+            user,
+            userTable,
+            queueManager,
+            log: server.log,
+          }),
           // Update the user's attributes in the idp
           cognito.send(
             new AdminUpdateUserAttributesCommand({
@@ -104,9 +105,11 @@ async function routes(
             })
           ),
         ]);
-        sendWebhook("user.created", created, server.log);
         return res.status(201).send(created);
       } catch (e: any) {
+        if (e.name === "UserExistsError") {
+          return res.status(400).send({ error: e.message });
+        }
         server.log.error(e);
         return res.status(500).send({
           error: e.message,

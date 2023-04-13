@@ -37,7 +37,7 @@ export const createTable = async () => {
       ],
       GlobalSecondaryIndexes: [
         {
-          IndexName: "email-index",
+          IndexName: "email",
           KeySchema: [
             {
               AttributeName: "email",

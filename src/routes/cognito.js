@@ -17,8 +17,8 @@ const types_1 = require("../types");
 const uuid_1 = require("uuid");
 const client_cognito_identity_provider_1 = require("@aws-sdk/client-cognito-identity-provider");
 const config_1 = __importDefault(require("../config"));
-const webhooks_1 = require("../webhooks");
 const validate_source_1 = require("../middleware/validate-source");
+const crud_1 = require("../crud");
 exports.cognito = new client_cognito_identity_provider_1.CognitoIdentityProviderClient({
     region: config_1.default.aws.region,
     endpoint: config_1.default.aws.endpoints.cognito,
@@ -64,11 +64,13 @@ function routes(server, { userTable, queueManager, }) {
                 created: Date.now(),
             };
             try {
-                const [created, queue, cog] = yield Promise.all([
-                    // Create the user
-                    userTable.create(user),
-                    // Create the user's queue
-                    queueManager.createQueue(`${config_1.default.queue.sd_prefix}${user.id}`),
+                const [created, cog] = yield Promise.all([
+                    (0, crud_1.createUser)({
+                        user,
+                        userTable,
+                        queueManager,
+                        log: server.log,
+                    }),
                     // Update the user's attributes in the idp
                     exports.cognito.send(new client_cognito_identity_provider_1.AdminUpdateUserAttributesCommand({
                         UserPoolId: userPoolId,
@@ -81,10 +83,12 @@ function routes(server, { userTable, queueManager, }) {
                         ],
                     })),
                 ]);
-                (0, webhooks_1.sendWebhook)("user.created", created, server.log);
                 return res.status(201).send(created);
             }
             catch (e) {
+                if (e.name === "UserExistsError") {
+                    return res.status(400).send({ error: e.message });
+                }
                 server.log.error(e);
                 return res.status(500).send({
                     error: e.message,

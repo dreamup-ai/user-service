@@ -44,7 +44,7 @@ const createTable = () => __awaiter(void 0, void 0, void 0, function* () {
         ],
         GlobalSecondaryIndexes: [
             {
-                IndexName: "email-index",
+                IndexName: "email",
                 KeySchema: [
                     {
                         AttributeName: "email",
