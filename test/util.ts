@@ -71,9 +71,12 @@ assert(COGNITO_PRIVATE_KEY_PATH, "PRIVATE_KEY_PATH is required");
 const rawPrivateKey = fs
   .readFileSync(COGNITO_PRIVATE_KEY_PATH)
   .toString("utf8");
-const privateKey = crypto.createPrivateKey(rawPrivateKey);
+const cognitoPrivateKey = crypto.createPrivateKey(rawPrivateKey);
 
-export function sign(payload: string) {
+export function sign(
+  payload: string,
+  privateKey: crypto.KeyObject = cognitoPrivateKey
+) {
   const signature = crypto.sign("sha256", Buffer.from(payload), privateKey);
   return signature.toString("base64");
 }

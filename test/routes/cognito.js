@@ -27,31 +27,29 @@ const queueManager = new queue_sqs_1.QueueManager();
 const payload = () => {
     return JSON.parse(JSON.stringify(Object.assign(Object.assign({}, cognito_payload_json_1.default), { userPoolId: config_1.default.idp.cognito.userPoolId })));
 };
-let server;
-before(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield userTable.connect();
-    server = yield (0, server_1.build)(userTable, queueManager);
-    try {
-        yield (0, util_1.createTable)();
-    }
-    catch (e) {
-        if (e.code !== "ResourceInUseException") {
-            throw e;
-        }
-    }
-}));
-after(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, util_1.deleteTable)();
-}));
-beforeEach(() => __awaiter(void 0, void 0, void 0, function* () {
-    yield (0, util_1.clearTable)();
-}));
 describe("POST /user/cognito", () => {
+    let server;
     let cognitoStub;
-    beforeEach(() => {
+    before(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield userTable.connect();
+        server = yield (0, server_1.build)(userTable, queueManager);
+        try {
+            yield (0, util_1.createTable)();
+        }
+        catch (e) {
+            if (e.code !== "ResourceInUseException") {
+                throw e;
+            }
+        }
+    }));
+    after(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield (0, util_1.deleteTable)();
+    }));
+    beforeEach(() => __awaiter(void 0, void 0, void 0, function* () {
+        yield (0, util_1.clearTable)();
         sandbox.restore();
         cognitoStub = sandbox.stub(cognito_1.cognito, "send").resolves();
-    });
+    }));
     afterEach(() => {
         sandbox.restore();
     });

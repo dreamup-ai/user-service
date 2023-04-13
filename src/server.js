@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.start = exports.build = void 0;
 const fastify_1 = __importDefault(require("fastify"));
 const cognito_1 = __importDefault(require("./routes/cognito"));
+const user_1 = __importDefault(require("./routes/user"));
 const config_1 = __importDefault(require("./config"));
 const build = (userTable, queueManager) => __awaiter(void 0, void 0, void 0, function* () {
     const server = (0, fastify_1.default)({
@@ -31,7 +32,21 @@ const build = (userTable, queueManager) => __awaiter(void 0, void 0, void 0, fun
     }, () => __awaiter(void 0, void 0, void 0, function* () {
         return "OK";
     }));
+    server.setErrorHandler((error, request, reply) => {
+        const { message, statusCode, validation, validationContext } = error;
+        if (validation) {
+            reply.status(400).send({
+                error: message,
+            });
+        }
+        else {
+            reply.status(statusCode || 500).send({
+                error: message,
+            });
+        }
+    });
     yield server.register(cognito_1.default, { userTable, queueManager });
+    yield server.register(user_1.default, { userTable, queueManager });
     return server;
 });
 exports.build = build;

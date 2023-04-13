@@ -24,32 +24,31 @@ const payload = () => {
   );
 };
 
-let server: FastifyInstance;
-before(async () => {
-  await userTable.connect();
-  server = await build(userTable, queueManager);
-  try {
-    await createTable();
-  } catch (e: any) {
-    if (e.code !== "ResourceInUseException") {
-      throw e;
-    }
-  }
-});
-after(async () => {
-  await deleteTable();
-});
-
-beforeEach(async () => {
-  await clearTable();
-});
-
 describe("POST /user/cognito", () => {
+  let server: FastifyInstance;
   let cognitoStub: sinon.SinonStub;
-  beforeEach(() => {
+
+  before(async () => {
+    await userTable.connect();
+    server = await build(userTable, queueManager);
+    try {
+      await createTable();
+    } catch (e: any) {
+      if (e.code !== "ResourceInUseException") {
+        throw e;
+      }
+    }
+  });
+  after(async () => {
+    await deleteTable();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
     sandbox.restore();
     cognitoStub = sandbox.stub(cognito, "send").resolves();
   });
+
   afterEach(() => {
     sandbox.restore();
   });

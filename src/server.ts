@@ -1,6 +1,7 @@
 import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import cognitoRoutes from "./routes/cognito";
+import userRoutes from "./routes/user";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import config from "./config";
 export const build = async (
@@ -26,8 +27,21 @@ export const build = async (
       return "OK";
     }
   );
+  server.setErrorHandler((error, request, reply) => {
+    const { message, statusCode, validation, validationContext } = error;
+    if (validation) {
+      reply.status(400).send({
+        error: message,
+      });
+    } else {
+      reply.status(statusCode || 500).send({
+        error: message,
+      });
+    }
+  });
 
   await server.register(cognitoRoutes, { userTable, queueManager });
+  await server.register(userRoutes, { userTable, queueManager });
 
   return server;
 };

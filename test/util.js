@@ -74,8 +74,8 @@ exports.clearTable = clearTable;
 const rawPrivateKey = node_fs_1.default
     .readFileSync(COGNITO_PRIVATE_KEY_PATH)
     .toString("utf8");
-const privateKey = node_crypto_1.default.createPrivateKey(rawPrivateKey);
-function sign(payload) {
+const cognitoPrivateKey = node_crypto_1.default.createPrivateKey(rawPrivateKey);
+function sign(payload, privateKey = cognitoPrivateKey) {
     const signature = node_crypto_1.default.sign("sha256", Buffer.from(payload), privateKey);
     return signature.toString("base64");
 }
