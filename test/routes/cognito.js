@@ -124,7 +124,6 @@ describe("POST /user/cognito", () => {
             payload: body,
         });
         const respBody = response.json();
-        console.log(respBody);
         (0, chai_1.expect)(response.statusCode).to.equal(201);
         (0, chai_1.expect)(respBody).to.have.property("id");
         (0, chai_1.expect)(respBody.created).to.be.a("number");
