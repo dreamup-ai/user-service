@@ -33,7 +33,7 @@ const routes = (server, { userTable, queueManager, }) => __awaiter(void 0, void 
                 500: types_1.errorResponseSchema,
             },
         },
-        preValidation: (0, validate_source_1.makeSourceValidator)(config_1.default.webhooks.publicKey, config_1.default.webhooks.header),
+        preValidation: (0, validate_source_1.makeSourceValidator)(config_1.default.webhooks.publicKey, config_1.default.webhooks.signatureHeader),
         handler: (req, res) => __awaiter(void 0, void 0, void 0, function* () {
             const { body } = req;
             const id = (0, uuid_1.v4)();

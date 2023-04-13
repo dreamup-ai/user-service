@@ -4,9 +4,9 @@
   "description": "A service for managing users and user sessions in dreamup ai",
   "main": "src/index.js",
   "scripts": {
-    "test": "npm run build && mocha --require test/env.js --recursive test",
+    "test": "npm run build && APP_ENV=test mocha --require test/env.js --recursive test",
     "build": "tsc",
-    "start": "npm run build && node src/index.js",
+    "start": "npm run build && APP_ENV=local node src/index.js",
     "compile-schemas": "json2ts -i src/schemas -o src/ctypes.ts -p -s"
   },
   "repository": {
@@ -17,11 +17,13 @@
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-cognito-identity-provider": "^3.310.0",
+    "@fastify/oauth2": "^7.0.1",
     "@fastify/type-provider-json-schema-to-ts": "^2.2.2",
     "db-dynamo": "github:dreamup-ai/db-dynamo",
     "fastify": "^4.15.0",
     "interfaces": "github:dreamup-ai/interfaces",
     "json-schema-to-ts": "^2.7.2",
+    "jsonwebtoken": "^9.0.0",
     "queue-sqs": "github:dreamup-ai/queue-sqs",
     "uuid": "^9.0.0"
   },
@@ -33,6 +35,7 @@
     "@types/sinon": "^10.0.13",
     "@types/uuid": "^9.0.1",
     "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
     "dynamo-tools": "github:shawnrushefsky/dynamo-tools",
     "mocha": "^10.2.0",
     "sinon": "^15.0.3"

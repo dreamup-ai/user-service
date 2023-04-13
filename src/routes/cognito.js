@@ -37,7 +37,7 @@ function routes(server, { userTable, queueManager, }) {
                 },
             },
             preValidation: [
-                (0, validate_source_1.makeSourceValidator)(config_1.default.idp.cognito.publicKey, config_1.default.idp.cognito.header),
+                (0, validate_source_1.makeSourceValidator)(config_1.default.idp.cognito.publicKey, config_1.default.idp.cognito.signatureHeader),
                 (req, res) => __awaiter(this, void 0, void 0, function* () {
                     // Request must be from Cognito
                     const { triggerSource, userPoolId } = req.body;

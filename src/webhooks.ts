@@ -27,7 +27,7 @@ export const sendWebhook = async (
       body,
       headers: {
         "Content-Type": "application/json",
-        [config.webhooks.header]: signature,
+        [config.webhooks.signatureHeader]: signature,
       },
     });
     if (!response.ok) {

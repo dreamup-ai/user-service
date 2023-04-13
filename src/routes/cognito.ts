@@ -50,7 +50,7 @@ async function routes(
       preValidation: [
         makeSourceValidator(
           config.idp.cognito.publicKey,
-          config.idp.cognito.header
+          config.idp.cognito.signatureHeader
         ),
         async (req, res) => {
           // Request must be from Cognito

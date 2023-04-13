@@ -67,7 +67,7 @@ describe("POST /user", () => {
             url: "/user",
             payload: body,
             headers: {
-                [config_1.default.webhooks.header]: "invalid",
+                [config_1.default.webhooks.signatureHeader]: "invalid",
             },
         });
         (0, chai_1.expect)(response.statusCode).to.equal(401);
@@ -82,7 +82,7 @@ describe("POST /user", () => {
             url: "/user",
             payload: body,
             headers: {
-                [config_1.default.webhooks.header]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
+                [config_1.default.webhooks.signatureHeader]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
             },
         });
         (0, chai_1.expect)(response.statusCode).to.equal(201);
@@ -98,7 +98,7 @@ describe("POST /user", () => {
             url: "/user",
             payload: body,
             headers: {
-                [config_1.default.webhooks.header]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
+                [config_1.default.webhooks.signatureHeader]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
             },
         });
         (0, chai_1.expect)(initResponse.statusCode).to.equal(201);
@@ -107,7 +107,7 @@ describe("POST /user", () => {
             url: "/user",
             payload: body,
             headers: {
-                [config_1.default.webhooks.header]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
+                [config_1.default.webhooks.signatureHeader]: (0, util_1.sign)(JSON.stringify(body), config_1.default.webhooks.privateKey),
             },
         });
         (0, chai_1.expect)(response.statusCode).to.equal(409);
@@ -121,7 +121,7 @@ describe("POST /user", () => {
             url: "/user",
             payload: {},
             headers: {
-                [config_1.default.webhooks.header]: (0, util_1.sign)(JSON.stringify({}), config_1.default.webhooks.privateKey),
+                [config_1.default.webhooks.signatureHeader]: (0, util_1.sign)(JSON.stringify({}), config_1.default.webhooks.privateKey),
             },
         });
         (0, chai_1.expect)(response.statusCode).to.equal(400);

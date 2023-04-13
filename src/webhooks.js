@@ -31,7 +31,7 @@ const sendWebhook = (event, data, log) => __awaiter(void 0, void 0, void 0, func
             body,
             headers: {
                 "Content-Type": "application/json",
-                [config_1.default.webhooks.header]: signature,
+                [config_1.default.webhooks.signatureHeader]: signature,
             },
         });
         if (!response.ok) {

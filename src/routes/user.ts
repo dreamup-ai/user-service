@@ -42,7 +42,7 @@ const routes = async (
     },
     preValidation: makeSourceValidator(
       config.webhooks.publicKey,
-      config.webhooks.header
+      config.webhooks.signatureHeader
     ),
     handler: async (req, res) => {
       const { body } = req;

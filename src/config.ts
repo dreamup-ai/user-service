@@ -3,8 +3,6 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 
 const {
-  COGNITO_USER_POOL_ID,
-  COGNITO_PUBLIC_KEY_PATH,
   SD_Q_PREFIX = "sd-jobs_",
   AWS_REGION,
   AWS_DEFAULT_REGION,
@@ -18,12 +16,28 @@ const {
   WEBHOOK_PRIVATE_KEY_PATH,
   WEBHOOK_SIG_HEADER = "x-dreamup-signature",
   COGNITO_SIG_HEADER = "x-cognito-signature",
+  COGNITO_USER_POOL_ID,
+  COGNITO_PUBLIC_KEY_PATH,
+  COGNITO_CLIENT_ID,
+  COGNITO_CLIENT_SECRET,
+  COGNITO_AUTH_HOST,
+  COGNITO_TOKEN_HOST,
+  COGNITO_AUTH_PATH,
+  COGNITO_TOKEN_PATH,
+  COGNITO_REDIRECT_PATH = "/login/cognito",
+  COGNITO_CALLBACK_URI = "http://localhost:3000/login/cognito/callback",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
 assert(COGNITO_PUBLIC_KEY_PATH, "COGNITO_PUBLIC_KEY_PATH is required");
 assert(WEBHOOK_PUBLIC_KEY_PATH, "WEBHOOK_PUBLIC_KEY_PATH is required");
 assert(WEBHOOK_PRIVATE_KEY_PATH, "WEBHOOK_PRIVATE_KEY_PATH is required");
+assert(COGNITO_CLIENT_ID, "COGNITO_CLIENT_ID is required");
+assert(COGNITO_CLIENT_SECRET, "COGNITO_CLIENT_SECRET is required");
+assert(COGNITO_AUTH_HOST, "COGNITO_AUTH_HOST is required");
+assert(COGNITO_TOKEN_HOST, "COGNITO_TOKEN_HOST is required");
+assert(COGNITO_AUTH_PATH, "COGNITO_AUTH_PATH is required");
+assert(COGNITO_TOKEN_PATH, "COGNITO_TOKEN_PATH is required");
 
 const rawCognitoPublicKey = fs.readFileSync(COGNITO_PUBLIC_KEY_PATH, "utf8");
 const cognitoPublicKey = crypto.createPublicKey(rawCognitoPublicKey);
@@ -46,7 +60,15 @@ type configType = {
     cognito: {
       userPoolId: string;
       publicKey: crypto.KeyObject;
-      header: string;
+      signatureHeader: string;
+      clientId: string;
+      clientSecret: string;
+      authHost: string;
+      tokenHost: string;
+      authPath: string;
+      tokenPath: string;
+      redirectPath: string;
+      callbackUri: string;
     };
   };
   db: {
@@ -64,7 +86,7 @@ type configType = {
     };
     publicKey: crypto.KeyObject;
     privateKey: crypto.KeyObject;
-    header: string;
+    signatureHeader: string;
   };
 };
 
@@ -81,7 +103,15 @@ const config: configType = {
     cognito: {
       userPoolId: COGNITO_USER_POOL_ID,
       publicKey: cognitoPublicKey,
-      header: COGNITO_SIG_HEADER,
+      signatureHeader: COGNITO_SIG_HEADER,
+      clientId: COGNITO_CLIENT_ID,
+      clientSecret: COGNITO_CLIENT_SECRET,
+      authHost: COGNITO_AUTH_HOST,
+      tokenHost: COGNITO_TOKEN_HOST,
+      authPath: COGNITO_AUTH_PATH,
+      tokenPath: COGNITO_TOKEN_PATH,
+      redirectPath: COGNITO_REDIRECT_PATH,
+      callbackUri: COGNITO_CALLBACK_URI,
     },
   },
   db: {
@@ -97,7 +127,7 @@ const config: configType = {
     events: {},
     publicKey: webhookPublicKey,
     privateKey: webhookPrivateKey,
-    header: WEBHOOK_SIG_HEADER,
+    signatureHeader: WEBHOOK_SIG_HEADER,
   },
 };
 

@@ -4,6 +4,7 @@ import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import config from "./config";
+
 export const build = async (
   userTable: IDatabaseTable,
   queueManager: IQueueManager

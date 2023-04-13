@@ -61,7 +61,7 @@ describe("POST /user", () => {
       url: "/user",
       payload: body,
       headers: {
-        [config.webhooks.header]: "invalid",
+        [config.webhooks.signatureHeader]: "invalid",
       },
     });
     expect(response.statusCode).to.equal(401);
@@ -77,7 +77,7 @@ describe("POST /user", () => {
       url: "/user",
       payload: body,
       headers: {
-        [config.webhooks.header]: sign(
+        [config.webhooks.signatureHeader]: sign(
           JSON.stringify(body),
           config.webhooks.privateKey
         ),
@@ -98,7 +98,7 @@ describe("POST /user", () => {
       url: "/user",
       payload: body,
       headers: {
-        [config.webhooks.header]: sign(
+        [config.webhooks.signatureHeader]: sign(
           JSON.stringify(body),
           config.webhooks.privateKey
         ),
@@ -112,7 +112,7 @@ describe("POST /user", () => {
       url: "/user",
       payload: body,
       headers: {
-        [config.webhooks.header]: sign(
+        [config.webhooks.signatureHeader]: sign(
           JSON.stringify(body),
           config.webhooks.privateKey
         ),
@@ -130,7 +130,7 @@ describe("POST /user", () => {
       url: "/user",
       payload: {},
       headers: {
-        [config.webhooks.header]: sign(
+        [config.webhooks.signatureHeader]: sign(
           JSON.stringify({}),
           config.webhooks.privateKey
         ),

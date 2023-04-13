@@ -71,7 +71,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -88,7 +88,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -104,7 +104,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: "Invalid",
+        [config.idp.cognito.signatureHeader]: "Invalid",
       },
       payload: body,
     });
@@ -120,7 +120,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -146,7 +146,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -156,7 +156,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        [config.idp.cognito.header]: sign(JSON.stringify(body)),
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
       },
       payload: body,
     });

@@ -71,7 +71,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.signatureHeader]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -87,7 +87,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.signatureHeader]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -102,7 +102,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: "Invalid",
+                [config_1.default.idp.cognito.signatureHeader]: "Invalid",
             },
             payload: body,
         });
@@ -117,7 +117,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.signatureHeader]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -140,7 +140,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.signatureHeader]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -149,7 +149,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.signatureHeader]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
