@@ -5,6 +5,8 @@ import {
   CognitoNewUserPayload,
   NewUserHeader,
   cognitoNewUserPayloadSchema,
+  ErrorResponse,
+  errorResponseSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import crypto from "node:crypto";
@@ -33,7 +35,7 @@ async function routes(
   server.post<{
     Body: CognitoNewUserPayload;
     Headers: NewUserHeader;
-    Response: User;
+    Response: User | ErrorResponse;
   }>(
     "/user/cognito",
     {
@@ -41,6 +43,10 @@ async function routes(
         body: cognitoNewUserPayloadSchema,
         response: {
           201: userSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          409: errorResponseSchema,
+          500: errorResponseSchema,
         },
       },
       preValidation: [

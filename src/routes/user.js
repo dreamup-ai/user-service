@@ -27,6 +27,10 @@ const routes = (server, { userTable, queueManager, }) => __awaiter(void 0, void 
             body: types_1.systemUserUpdateSchema,
             response: {
                 201: types_1.userSchema,
+                400: types_1.errorResponseSchema,
+                401: types_1.errorResponseSchema,
+                409: types_1.errorResponseSchema,
+                500: types_1.errorResponseSchema,
             },
         },
         preValidation: (0, validate_source_1.makeSourceValidator)(config_1.default.webhooks.publicKey, config_1.default.webhooks.header),

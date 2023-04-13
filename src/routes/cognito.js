@@ -30,6 +30,10 @@ function routes(server, { userTable, queueManager, }) {
                 body: types_1.cognitoNewUserPayloadSchema,
                 response: {
                     201: types_1.userSchema,
+                    400: types_1.errorResponseSchema,
+                    401: types_1.errorResponseSchema,
+                    409: types_1.errorResponseSchema,
+                    500: types_1.errorResponseSchema,
                 },
             },
             preValidation: [

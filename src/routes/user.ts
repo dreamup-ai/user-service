@@ -5,6 +5,8 @@ import {
   NewUserHeader,
   systemUserUpdateSchema,
   SystemUserUpdate,
+  ErrorResponse,
+  errorResponseSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
 import { IDatabaseTable, IQueueManager } from "interfaces";
@@ -26,12 +28,16 @@ const routes = async (
   server.post<{
     Body: SystemUserUpdate;
     Headers: NewUserHeader;
-    Response: User;
+    Response: User | ErrorResponse;
   }>("/user", {
     schema: {
       body: systemUserUpdateSchema,
       response: {
         201: userSchema,
+        400: errorResponseSchema,
+        401: errorResponseSchema,
+        409: errorResponseSchema,
+        500: errorResponseSchema,
       },
     },
     preValidation: makeSourceValidator(

@@ -249,10 +249,9 @@ exports.cognitoNewUserPayloadSchema = {
 };
 exports.newUserHeaderSchema = {
     type: "object",
-    properties: {
-        "x-idp-signature": {
-            type: "string",
-            description: "The signature of the payload",
-        },
+    properties: {},
+    additionalProperties: {
+        type: "string",
+        pattern: "^x-w+-signature$",
     },
 };
