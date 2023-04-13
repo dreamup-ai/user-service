@@ -9,14 +9,12 @@ import {
   errorResponseSchema,
 } from "../types";
 import { v4 as uuidv4 } from "uuid";
-import crypto from "node:crypto";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import {
   CognitoIdentityProviderClient,
   AdminUpdateUserAttributesCommand,
 } from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config";
-import { sendWebhook } from "../webhooks";
 import { makeSourceValidator } from "../middleware/validate-source";
 import { createUser } from "../crud";
 
