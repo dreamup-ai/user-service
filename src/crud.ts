@@ -36,3 +36,32 @@ export const createUser = async ({
   sendWebhook("user.created", created, log);
   return created;
 };
+
+export const getUserByEmail = async ({
+  email,
+  userTable,
+}: {
+  email: string;
+  userTable: IDatabaseTable;
+}) => {
+  try {
+    const { items: users } = await userTable.query({
+      query: { email },
+      pageSize: 1,
+      sortKey: "created",
+      sortDir: SortDirection.DESC,
+    });
+    if (users.length === 0) {
+      const e = new Error("User not found");
+      e.name = "UserNotFoundError";
+      throw e;
+    }
+    return users[0];
+  } catch (e: any) {
+    if (e.name === "UserNotFoundError") {
+      throw e;
+    }
+    console.error(e);
+    throw new Error("Internal server error");
+  }
+};

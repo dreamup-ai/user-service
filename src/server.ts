@@ -42,7 +42,7 @@ export const build = async (
     }
   });
 
-  await server.register(identityProviders);
+  await server.register(identityProviders, { userTable });
   await server.register(cognitoRoutes, { userTable, queueManager });
   await server.register(userRoutes, { userTable, queueManager });
 

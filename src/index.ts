@@ -1,7 +1,8 @@
 import { DatabaseTable } from "db-dynamo";
 import { QueueManager } from "queue-sqs";
+import config from "./config";
 
-const userTable = new DatabaseTable(process.env.USER_TABLE || "users");
+const userTable = new DatabaseTable(config.db.userTable);
 const queueManager = new QueueManager();
 
 import { start, build } from "./server";
