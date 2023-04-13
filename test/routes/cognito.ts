@@ -161,7 +161,7 @@ describe("POST /user/cognito", () => {
       },
       payload: body,
     });
-    expect(response.statusCode).to.equal(400);
+    expect(response.statusCode).to.equal(409);
     expect(response.json()).to.deep.equal({
       error: "User already exists",
     });

@@ -58,6 +58,11 @@ const routes = async (
         });
         return res.status(201).send(created);
       } catch (e: any) {
+        if (e.name === "UserExistsError") {
+          return res.status(409).send({
+            error: "User already exists",
+          });
+        }
         server.log.error(e);
         return res.status(500).send({
           error: "Internal server error",

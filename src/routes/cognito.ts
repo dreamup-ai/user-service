@@ -108,7 +108,7 @@ async function routes(
         return res.status(201).send(created);
       } catch (e: any) {
         if (e.name === "UserExistsError") {
-          return res.status(400).send({ error: e.message });
+          return res.status(409).send({ error: e.message });
         }
         server.log.error(e);
         return res.status(500).send({
