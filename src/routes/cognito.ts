@@ -15,6 +15,7 @@ import {
 } from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config";
 import { sendWebhook } from "../webhooks";
+import { makeSourceValidator } from "../middleware/validate-source";
 
 export const cognito = new CognitoIdentityProviderClient({
   region: config.aws.region,
@@ -41,41 +42,26 @@ async function routes(
           201: userSchema,
         },
       },
-      preValidation: async (req, res) => {
-        // Request must be signed
-        const { "x-idp-signature": signature } = req.headers;
-        if (!signature) {
-          return res.status(400).send({
-            error: "Missing signature",
-          });
-        }
-
-        // Request must be from Cognito
-        const { triggerSource, userPoolId } = req.body;
-        if (triggerSource !== "PostConfirmation_ConfirmSignUp") {
-          return res.status(400).send({
-            error: "Invalid trigger source",
-          });
-        }
-        if (userPoolId !== config.idp.cognito.userPoolId) {
-          return res.status(400).send({
-            error: "Invalid user pool ID",
-          });
-        }
-
-        // Request must be valid
-        const isVerified = crypto.verify(
-          "sha256",
-          Buffer.from(JSON.stringify(req.body)),
+      preValidation: [
+        makeSourceValidator(
           config.idp.cognito.publicKey,
-          Buffer.from(signature, "base64")
-        );
-        if (!isVerified) {
-          return res.status(401).send({
-            error: "Invalid signature",
-          });
-        }
-      },
+          config.idp.cognito.header
+        ),
+        async (req, res) => {
+          // Request must be from Cognito
+          const { triggerSource, userPoolId } = req.body;
+          if (triggerSource !== "PostConfirmation_ConfirmSignUp") {
+            return res.status(400).send({
+              error: "Invalid trigger source",
+            });
+          }
+          if (userPoolId !== config.idp.cognito.userPoolId) {
+            return res.status(400).send({
+              error: "Invalid user pool ID",
+            });
+          }
+        },
+      ],
     },
 
     async (req, res) => {
@@ -118,7 +104,7 @@ async function routes(
             })
           ),
         ]);
-        sendWebhook("user.created", { user: user.id }, server.log);
+        sendWebhook("user.created", created, server.log);
         return res.status(201).send(created);
       } catch (e: any) {
         server.log.error(e);

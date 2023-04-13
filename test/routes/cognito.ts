@@ -5,20 +5,22 @@ import { sign, createTable, deleteTable, clearTable } from "../util";
 import { FastifyInstance } from "fastify";
 import cognitoPayload from "../fixtures/cognito-payload.json";
 import sinon from "sinon";
+import config from "../../src/config";
 
 const sandbox = sinon.createSandbox();
-
-const { COGNITO_USER_POOL_ID } = process.env;
 
 import { DatabaseTable } from "db-dynamo";
 import { QueueManager } from "queue-sqs";
 
-const userTable = new DatabaseTable(process.env.USER_TABLE || "users");
+const userTable = new DatabaseTable(config.db.userTable);
 const queueManager = new QueueManager();
 
 const payload = () => {
   return JSON.parse(
-    JSON.stringify({ ...cognitoPayload, userPoolId: COGNITO_USER_POOL_ID })
+    JSON.stringify({
+      ...cognitoPayload,
+      userPoolId: config.idp.cognito.userPoolId,
+    })
   );
 };
 
@@ -70,7 +72,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        "x-idp-signature": sign(JSON.stringify(body)),
+        [config.idp.cognito.header]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -87,7 +89,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        "x-idp-signature": sign(JSON.stringify(body)),
+        [config.idp.cognito.header]: sign(JSON.stringify(body)),
       },
       payload: body,
     });
@@ -103,7 +105,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        "x-idp-signature": "Invalid",
+        [config.idp.cognito.header]: "Invalid",
       },
       payload: body,
     });
@@ -119,7 +121,7 @@ describe("POST /user/cognito", () => {
       method: "POST",
       url: "/user/cognito",
       headers: {
-        "x-idp-signature": sign(JSON.stringify(body)),
+        [config.idp.cognito.header]: sign(JSON.stringify(body)),
       },
       payload: body,
     });

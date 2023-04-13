@@ -15,10 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.cognito = void 0;
 const types_1 = require("../types");
 const uuid_1 = require("uuid");
-const node_crypto_1 = __importDefault(require("node:crypto"));
 const client_cognito_identity_provider_1 = require("@aws-sdk/client-cognito-identity-provider");
 const config_1 = __importDefault(require("../config"));
 const webhooks_1 = require("../webhooks");
+const validate_source_1 = require("../middleware/validate-source");
 exports.cognito = new client_cognito_identity_provider_1.CognitoIdentityProviderClient({
     region: config_1.default.aws.region,
     endpoint: config_1.default.aws.endpoints.cognito,
@@ -32,34 +32,23 @@ function routes(server, { userTable, queueManager, }) {
                     201: types_1.userSchema,
                 },
             },
-            preValidation: (req, res) => __awaiter(this, void 0, void 0, function* () {
-                // Request must be signed
-                const { "x-idp-signature": signature } = req.headers;
-                if (!signature) {
-                    return res.status(400).send({
-                        error: "Missing signature",
-                    });
-                }
-                // Request must be from Cognito
-                const { triggerSource, userPoolId } = req.body;
-                if (triggerSource !== "PostConfirmation_ConfirmSignUp") {
-                    return res.status(400).send({
-                        error: "Invalid trigger source",
-                    });
-                }
-                if (userPoolId !== config_1.default.idp.cognito.userPoolId) {
-                    return res.status(400).send({
-                        error: "Invalid user pool ID",
-                    });
-                }
-                // Request must be valid
-                const isVerified = node_crypto_1.default.verify("sha256", Buffer.from(JSON.stringify(req.body)), config_1.default.idp.cognito.publicKey, Buffer.from(signature, "base64"));
-                if (!isVerified) {
-                    return res.status(401).send({
-                        error: "Invalid signature",
-                    });
-                }
-            }),
+            preValidation: [
+                (0, validate_source_1.makeSourceValidator)(config_1.default.idp.cognito.publicKey, config_1.default.idp.cognito.header),
+                (req, res) => __awaiter(this, void 0, void 0, function* () {
+                    // Request must be from Cognito
+                    const { triggerSource, userPoolId } = req.body;
+                    if (triggerSource !== "PostConfirmation_ConfirmSignUp") {
+                        return res.status(400).send({
+                            error: "Invalid trigger source",
+                        });
+                    }
+                    if (userPoolId !== config_1.default.idp.cognito.userPoolId) {
+                        return res.status(400).send({
+                            error: "Invalid user pool ID",
+                        });
+                    }
+                }),
+            ],
         }, (req, res) => __awaiter(this, void 0, void 0, function* () {
             const { userPoolId, request: { userAttributes }, } = req.body;
             const { sub, email } = userAttributes;
@@ -92,7 +81,7 @@ function routes(server, { userTable, queueManager, }) {
                         ],
                     })),
                 ]);
-                (0, webhooks_1.sendWebhook)("user.created", { user: user.id }, server.log);
+                (0, webhooks_1.sendWebhook)("user.created", created, server.log);
                 return res.status(201).send(created);
             }
             catch (e) {

@@ -17,6 +17,7 @@ const {
   WEBHOOK_PUBLIC_KEY_PATH,
   WEBHOOK_PRIVATE_KEY_PATH,
   WEBHOOK_SIG_HEADER = "x-dreamup-signature",
+  COGNITO_SIG_HEADER = "x-cognito-signature",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -45,6 +46,7 @@ type configType = {
     cognito: {
       userPoolId: string;
       publicKey: crypto.KeyObject;
+      header: string;
     };
   };
   db: {
@@ -79,6 +81,7 @@ const config: configType = {
     cognito: {
       userPoolId: COGNITO_USER_POOL_ID,
       publicKey: cognitoPublicKey,
+      header: COGNITO_SIG_HEADER,
     },
   },
   db: {

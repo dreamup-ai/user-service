@@ -18,14 +18,14 @@ const cognito_1 = require("../../src/routes/cognito");
 const util_1 = require("../util");
 const cognito_payload_json_1 = __importDefault(require("../fixtures/cognito-payload.json"));
 const sinon_1 = __importDefault(require("sinon"));
+const config_1 = __importDefault(require("../../src/config"));
 const sandbox = sinon_1.default.createSandbox();
-const { COGNITO_USER_POOL_ID } = process.env;
 const db_dynamo_1 = require("db-dynamo");
 const queue_sqs_1 = require("queue-sqs");
-const userTable = new db_dynamo_1.DatabaseTable(process.env.USER_TABLE || "users");
+const userTable = new db_dynamo_1.DatabaseTable(config_1.default.db.userTable);
 const queueManager = new queue_sqs_1.QueueManager();
 const payload = () => {
-    return JSON.parse(JSON.stringify(Object.assign(Object.assign({}, cognito_payload_json_1.default), { userPoolId: COGNITO_USER_POOL_ID })));
+    return JSON.parse(JSON.stringify(Object.assign(Object.assign({}, cognito_payload_json_1.default), { userPoolId: config_1.default.idp.cognito.userPoolId })));
 };
 let server;
 before(() => __awaiter(void 0, void 0, void 0, function* () {
@@ -73,7 +73,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                "x-idp-signature": (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -89,7 +89,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                "x-idp-signature": (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
@@ -104,7 +104,7 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                "x-idp-signature": "Invalid",
+                [config_1.default.idp.cognito.header]: "Invalid",
             },
             payload: body,
         });
@@ -119,11 +119,12 @@ describe("POST /user/cognito", () => {
             method: "POST",
             url: "/user/cognito",
             headers: {
-                "x-idp-signature": (0, util_1.sign)(JSON.stringify(body)),
+                [config_1.default.idp.cognito.header]: (0, util_1.sign)(JSON.stringify(body)),
             },
             payload: body,
         });
         const respBody = response.json();
+        console.log(respBody);
         (0, chai_1.expect)(response.statusCode).to.equal(201);
         (0, chai_1.expect)(respBody).to.have.property("id");
         (0, chai_1.expect)(respBody.created).to.be.a("number");

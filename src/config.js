@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const node_assert_1 = __importDefault(require("node:assert"));
 const node_fs_1 = __importDefault(require("node:fs"));
 const node_crypto_1 = __importDefault(require("node:crypto"));
-const { COGNITO_USER_POOL_ID, COGNITO_PUBLIC_KEY_PATH, SD_Q_PREFIX = "sd-jobs_", AWS_REGION, AWS_DEFAULT_REGION, COGNITO_IDP_ENDPOINT, SQS_ENDPOINT, DYNAMODB_ENDPOINT, USER_TABLE, PORT, WEBHOOK_USER_CREATE, WEBHOOK_PUBLIC_KEY_PATH, WEBHOOK_PRIVATE_KEY_PATH, WEBHOOK_SIG_HEADER = "x-dreamup-signature", } = process.env;
+const { COGNITO_USER_POOL_ID, COGNITO_PUBLIC_KEY_PATH, SD_Q_PREFIX = "sd-jobs_", AWS_REGION, AWS_DEFAULT_REGION, COGNITO_IDP_ENDPOINT, SQS_ENDPOINT, DYNAMODB_ENDPOINT, USER_TABLE, PORT, WEBHOOK_USER_CREATE, WEBHOOK_PUBLIC_KEY_PATH, WEBHOOK_PRIVATE_KEY_PATH, WEBHOOK_SIG_HEADER = "x-dreamup-signature", COGNITO_SIG_HEADER = "x-cognito-signature", } = process.env;
 (0, node_assert_1.default)(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
 (0, node_assert_1.default)(COGNITO_PUBLIC_KEY_PATH, "COGNITO_PUBLIC_KEY_PATH is required");
 (0, node_assert_1.default)(WEBHOOK_PUBLIC_KEY_PATH, "WEBHOOK_PUBLIC_KEY_PATH is required");
@@ -30,6 +30,7 @@ const config = {
         cognito: {
             userPoolId: COGNITO_USER_POOL_ID,
             publicKey: cognitoPublicKey,
+            header: COGNITO_SIG_HEADER,
         },
     },
     db: {
