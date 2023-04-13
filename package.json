@@ -6,7 +6,8 @@
   "scripts": {
     "test": "npm run build && APP_ENV=test mocha --require dist/test/env.js --recursive dist/test",
     "build": "tsc",
-    "start": "APP_ENV=local node dist/src/index.js"
+    "start": "APP_ENV=local node dist/src/index.js",
+    "init-local": "docker compose up --detach && APP_ENV=local node dist/init-local-dynamo.js"
   },
   "repository": {
     "type": "git",

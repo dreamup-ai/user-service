@@ -1,4 +1,4 @@
-require("../env");
+require("./test/env");
 const crypto = require("crypto");
 const fs = require("fs");
 

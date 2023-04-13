@@ -1,6 +1,8 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import crypto from "node:crypto";
+import * as dotenv from "dotenv";
+dotenv.config({ override: true, path: `./.env.${process.env.APP_ENV}` });
 
 const {
   SD_Q_PREFIX = "sd-jobs_",

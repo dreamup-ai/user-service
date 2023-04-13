@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
+import identityProviders from "./idp";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import config from "./config";
 
@@ -41,6 +42,7 @@ export const build = async (
     }
   });
 
+  await server.register(identityProviders);
   await server.register(cognitoRoutes, { userTable, queueManager });
   await server.register(userRoutes, { userTable, queueManager });
 
@@ -48,7 +50,6 @@ export const build = async (
 };
 
 export const start = async (server: FastifyInstance) => {
-  await server.register(cognitoRoutes);
   try {
     await server.listen({ port: config.server.port });
   } catch (e) {

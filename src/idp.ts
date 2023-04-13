@@ -1,15 +1,8 @@
 import { FastifyInstance } from "fastify";
-import { IDatabaseTable, IQueueManager } from "interfaces";
 import oauthPlugin from "@fastify/oauth2";
 import config from "./config";
 
-const routes = async (
-  server: FastifyInstance,
-  {
-    userTable,
-    queueManager,
-  }: { userTable: IDatabaseTable; queueManager: IQueueManager }
-) => {
+const routes = async (server: FastifyInstance) => {
   server.register(oauthPlugin, {
     name: "cognito",
     credentials: {
@@ -29,3 +22,5 @@ const routes = async (
     scope: ["email openid profile"],
   });
 };
+
+export default routes;
