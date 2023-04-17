@@ -38,7 +38,7 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
     try {
       const decoded = jwt.verify(token, config.session.publicKey, {
         algorithms: ["RS256"],
-      });
+      }) as jwt.JwtPayload;
       const { userId, sessionId } = decoded as {
         userId: string;
         sessionId: string;

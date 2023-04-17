@@ -1,11 +1,11 @@
+import config from "./config";
+
 import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
 import identityProviders from "./idp";
 import { IDatabaseTable, IQueueManager } from "interfaces";
-import config from "./config";
-// import type { FastifyCookieOptions } from "@fastify/cookie";
 import cookie from "@fastify/cookie";
 
 export const build = async (

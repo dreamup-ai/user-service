@@ -35,6 +35,7 @@ const {
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_PATH = "/login/google",
   GOOGLE_CALLBACK_URI = "http://localhost:3000/login/google/callback",
+  // STATIC_DIR = "public",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -115,6 +116,7 @@ type configType = {
     privateKey: crypto.KeyObject;
     duration: string;
   };
+  // staticDir: string;
 };
 
 const config: configType = {
@@ -161,6 +163,7 @@ const config: configType = {
     privateKey: sessionPrivateKey,
     duration: SESSION_DURATION,
   },
+  // staticDir: STATIC_DIR,
 };
 
 if (WEBHOOK_USER_CREATE) {
