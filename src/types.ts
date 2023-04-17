@@ -126,7 +126,7 @@ export const systemUserUpdateSchema = {
 
 export type SystemUserUpdate = FromSchema<typeof systemUserUpdateSchema>;
 
-export const userSchema = {
+export const publicUserSchema = {
   allOf: [
     systemUserUpdateSchema,
     {
@@ -148,24 +148,43 @@ export const userSchema = {
           description:
             "The unix timestamp in ms of when the user was last updated",
         },
-        "idp:cognito": {
-          type: "object",
-          description: "The user's IDP data",
-          properties: {
-            userPoolId: {
-              type: "string",
-            },
-            userId: {
-              type: "string",
-            },
-          },
-        },
       },
     },
   ],
 } as const;
 
-export type User = FromSchema<typeof userSchema>;
+export type PublicUser = FromSchema<typeof publicUserSchema>;
+
+export const privateUserFieldsSchema = {
+  type: "object",
+  required: ["_queue"],
+  properties: {
+    "_idp:cognito:id": {
+      type: "string",
+      description: "The user's 'sub' (unique id) in Cognito",
+    },
+    "_idp:google:id": {
+      type: "string",
+      description: "The user's unique id in Google",
+    },
+    "_idp:discord:id": {
+      type: "string",
+      description: "The user's unique id in Discord",
+    },
+    _queue: {
+      type: "string",
+      description: "The user's queue",
+    },
+  },
+} as const;
+
+export type PrivateUserFields = FromSchema<typeof privateUserFieldsSchema>;
+
+export const rawUserSchema = {
+  allOf: [publicUserSchema, privateUserFieldsSchema],
+} as const;
+
+export type RawUser = FromSchema<typeof rawUserSchema>;
 
 export const deletedResponseSchema = {
   type: "object",
@@ -284,7 +303,7 @@ export type CognitoNewUserPayload = FromSchema<
   typeof cognitoNewUserPayloadSchema
 >;
 
-export const newUserHeaderSchema = {
+export const SignatureHeaderSchema = {
   type: "object",
   properties: {},
   additionalProperties: {
@@ -293,4 +312,4 @@ export const newUserHeaderSchema = {
   },
 } as const;
 
-export type NewUserHeader = FromSchema<typeof newUserHeaderSchema>;
+export type SignatureHeader = FromSchema<typeof SignatureHeaderSchema>;

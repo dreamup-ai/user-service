@@ -1,81 +1,41 @@
 import { FastifyInstance } from "fastify";
 import {
-  userSchema,
-  User,
-  NewUserHeader,
-  systemUserUpdateSchema,
-  SystemUserUpdate,
-  ErrorResponse,
+  publicUserSchema,
+  PublicUser,
   errorResponseSchema,
+  ErrorResponse,
 } from "../types";
-import { v4 as uuidv4 } from "uuid";
-import { IDatabaseTable, IQueueManager } from "interfaces";
 import config from "../config";
-import { makeSourceValidator } from "../middleware/validate-source";
-import { createUser } from "../crud";
+import { makeSessionValidator } from "../middleware/validate-session";
+import { getUserById } from "../crud";
 
-const routes = async (
-  server: FastifyInstance,
-  {
-    userTable,
-    queueManager,
-  }: { userTable: IDatabaseTable; queueManager: IQueueManager }
-) => {
-  /**
-   * Create a new user. Only accepts input signed
-   * by the dreamup private key.
-   */
-  server.post<{
-    Body: SystemUserUpdate;
-    Headers: NewUserHeader;
-    Response: User | ErrorResponse;
-  }>("/user", {
-    schema: {
-      body: systemUserUpdateSchema,
-      response: {
-        201: userSchema,
-        400: errorResponseSchema,
-        401: errorResponseSchema,
-        409: errorResponseSchema,
-        500: errorResponseSchema,
-      },
-    },
-    preValidation: makeSourceValidator(
-      config.webhooks.publicKey,
-      config.webhooks.signatureHeader
-    ),
-    handler: async (req, res) => {
-      const { body } = req;
-      const id = uuidv4();
-      const user = {
-        id,
-        ...body,
-        created: Date.now(),
-        "idp:dreamup": {
-          id,
+const routes = async (server: FastifyInstance) => {
+  server.get<{
+    Reply: PublicUser | ErrorResponse;
+  }>(
+    "/user/me",
+    {
+      schema: {
+        response: {
+          200: publicUserSchema,
+          401: errorResponseSchema,
         },
-      };
-      try {
-        const created = await createUser({
-          user,
-          userTable,
-          queueManager,
-          log: server.log,
-        });
-        return res.status(201).send(created);
-      } catch (e: any) {
-        if (e.name === "UserExistsError") {
-          return res.status(409).send({
-            error: "User already exists",
-          });
-        }
-        server.log.error(e);
-        return res.status(500).send({
-          error: "Internal server error",
-        });
-      }
+      },
+      preValidation: [makeSessionValidator(config.session.publicKey)],
     },
-  });
+    async (request, reply) => {
+      const { user } = request;
+      if (!user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const { userId } = user;
+      const userRecord = await getUserById(userId, server.log);
+      if (!userRecord) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      return userRecord;
+    }
+  );
 };
 
 export default routes;

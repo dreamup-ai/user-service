@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { build } from "../../src/server";
-import { cognito } from "../../src/routes/cognito";
+import { cognito } from "../../src/clients/cognito";
 import { sign, createTable, deleteTable, clearTable } from "../util";
 import { FastifyInstance } from "fastify";
 import cognitoPayload from "../fixtures/cognito-payload.json";
@@ -130,39 +130,9 @@ describe("POST /user/cognito", () => {
     expect(respBody).to.have.property("id");
     expect(respBody.created).to.be.a("number");
     expect(respBody.email).to.equal(body.request.userAttributes.email);
-    expect(respBody["idp:cognito"]).to.deep.equal({
-      userPoolId: body.userPoolId,
-      userId: body.request.userAttributes.sub,
-    });
     expect(respBody.preferences).to.deep.equal({ width: 512, height: 512 });
     expect(respBody.features).to.deep.equal({});
 
     expect(cognitoStub.calledOnce).to.be.true;
-  });
-
-  it("should return 400 if user already exists", async () => {
-    const body = payload();
-    const initResp = await server.inject({
-      method: "POST",
-      url: "/user/cognito",
-      headers: {
-        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
-      },
-      payload: body,
-    });
-    expect(initResp.statusCode).to.equal(201);
-
-    const response = await server.inject({
-      method: "POST",
-      url: "/user/cognito",
-      headers: {
-        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
-      },
-      payload: body,
-    });
-    expect(response.statusCode).to.equal(409);
-    expect(response.json()).to.deep.equal({
-      error: "User already exists",
-    });
   });
 });

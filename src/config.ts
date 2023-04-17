@@ -28,6 +28,9 @@ const {
   COGNITO_TOKEN_PATH,
   COGNITO_REDIRECT_PATH = "/login/cognito",
   COGNITO_CALLBACK_URI = "http://localhost:3000/login/cognito/callback",
+  SESSION_PRIVATE_KEY_PATH,
+  SESSION_PUBLIC_KEY_PATH,
+  SESSION_DURATION = "24h",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -40,6 +43,8 @@ assert(COGNITO_AUTH_HOST, "COGNITO_AUTH_HOST is required");
 assert(COGNITO_TOKEN_HOST, "COGNITO_TOKEN_HOST is required");
 assert(COGNITO_AUTH_PATH, "COGNITO_AUTH_PATH is required");
 assert(COGNITO_TOKEN_PATH, "COGNITO_TOKEN_PATH is required");
+assert(SESSION_PRIVATE_KEY_PATH, "SESSION_PRIVATE_KEY_PATH is required");
+assert(SESSION_PUBLIC_KEY_PATH, "SESSION_PUBLIC_KEY_PATH is required");
 
 const rawCognitoPublicKey = fs.readFileSync(COGNITO_PUBLIC_KEY_PATH, "utf8");
 const cognitoPublicKey = crypto.createPublicKey(rawCognitoPublicKey);
@@ -48,6 +53,11 @@ const rawWebhookPublicKey = fs.readFileSync(WEBHOOK_PUBLIC_KEY_PATH, "utf8");
 const webhookPublicKey = crypto.createPublicKey(rawWebhookPublicKey);
 const rawWebhookPrivateKey = fs.readFileSync(WEBHOOK_PRIVATE_KEY_PATH, "utf8");
 const webhookPrivateKey = crypto.createPrivateKey(rawWebhookPrivateKey);
+
+const rawSessionPublicKey = fs.readFileSync(SESSION_PUBLIC_KEY_PATH, "utf8");
+const sessionPublicKey = crypto.createPublicKey(rawSessionPublicKey);
+const rawSessionPrivateKey = fs.readFileSync(SESSION_PRIVATE_KEY_PATH, "utf8");
+const sessionPrivateKey = crypto.createPrivateKey(rawSessionPrivateKey);
 
 type configType = {
   aws: {
@@ -90,6 +100,11 @@ type configType = {
     privateKey: crypto.KeyObject;
     signatureHeader: string;
   };
+  session: {
+    publicKey: crypto.KeyObject;
+    privateKey: crypto.KeyObject;
+    duration: string;
+  };
 };
 
 const config: configType = {
@@ -130,6 +145,11 @@ const config: configType = {
     publicKey: webhookPublicKey,
     privateKey: webhookPrivateKey,
     signatureHeader: WEBHOOK_SIG_HEADER,
+  },
+  session: {
+    publicKey: sessionPublicKey,
+    privateKey: sessionPrivateKey,
+    duration: SESSION_DURATION,
   },
 };
 

@@ -5,6 +5,8 @@ import userRoutes from "./routes/user";
 import identityProviders from "./idp";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import config from "./config";
+// import type { FastifyCookieOptions } from "@fastify/cookie";
+import cookie from "@fastify/cookie";
 
 export const build = async (
   userTable: IDatabaseTable,
@@ -42,7 +44,9 @@ export const build = async (
     }
   });
 
-  await server.register(identityProviders, { userTable });
+  await server.register(cookie);
+
+  await server.register(identityProviders);
   await server.register(cognitoRoutes, { userTable, queueManager });
   await server.register(userRoutes, { userTable, queueManager });
 

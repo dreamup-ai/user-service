@@ -1,46 +1,32 @@
 import { FastifyInstance } from "fastify";
 import {
-  userSchema,
-  User,
+  publicUserSchema,
+  PublicUser,
   CognitoNewUserPayload,
-  NewUserHeader,
+  SignatureHeader,
   cognitoNewUserPayloadSchema,
   ErrorResponse,
   errorResponseSchema,
 } from "../types";
-import { v4 as uuidv4 } from "uuid";
-import { IDatabaseTable, IQueueManager } from "interfaces";
-import {
-  CognitoIdentityProviderClient,
-  AdminUpdateUserAttributesCommand,
-} from "@aws-sdk/client-cognito-identity-provider";
+
+import { AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config";
 import { makeSourceValidator } from "../middleware/validate-source";
 import { createUser } from "../crud";
+import { cognito } from "../clients/cognito";
 
-export const cognito = new CognitoIdentityProviderClient({
-  region: config.aws.region,
-  endpoint: config.aws.endpoints.cognito,
-});
-
-async function routes(
-  server: FastifyInstance,
-  {
-    userTable,
-    queueManager,
-  }: { userTable: IDatabaseTable; queueManager: IQueueManager }
-) {
+async function routes(server: FastifyInstance) {
   server.post<{
     Body: CognitoNewUserPayload;
-    Headers: NewUserHeader;
-    Response: User | ErrorResponse;
+    Headers: SignatureHeader;
+    Response: PublicUser | ErrorResponse;
   }>(
     "/user/cognito",
     {
       schema: {
         body: cognitoNewUserPayloadSchema,
         response: {
-          201: userSchema,
+          201: publicUserSchema,
           400: errorResponseSchema,
           401: errorResponseSchema,
           409: errorResponseSchema,
@@ -68,55 +54,35 @@ async function routes(
         },
       ],
     },
-
-    async (req, res) => {
+    async (req, reply) => {
       const {
-        userPoolId,
         request: { userAttributes },
       } = req.body;
 
       const { sub, email } = userAttributes;
-      const user = {
-        id: uuidv4(),
-        email,
-        "idp:cognito": {
-          userPoolId,
-          userId: sub,
-        },
-        preferences: {},
-        features: {},
-        created: Date.now(),
-      };
       try {
-        const [created, cog] = await Promise.all([
-          createUser({
-            user,
-            userTable,
-            queueManager,
-            log: server.log,
-          }),
-          // Update the user's attributes in the idp
-          cognito.send(
-            new AdminUpdateUserAttributesCommand({
-              UserPoolId: userPoolId,
-              Username: sub,
-              UserAttributes: [
-                {
-                  Name: "custom:dream_id",
-                  Value: user.id,
-                },
-              ],
-            })
-          ),
-        ]);
-        return res.status(201).send(created);
+        const user = await createUser(email, server.log, {
+          "idp:cognito:id": sub,
+        });
+
+        // Update user attributes in cognito with our user ID
+        const updateCommand = new AdminUpdateUserAttributesCommand({
+          UserPoolId: config.idp.cognito.userPoolId,
+          Username: sub,
+          UserAttributes: [
+            {
+              Name: "custom:dreamup_id",
+              Value: user.id,
+            },
+          ],
+        });
+        await cognito.send(updateCommand);
+
+        return reply.status(201).send(user);
       } catch (e: any) {
-        if (e.name === "UserExistsError") {
-          return res.status(409).send({ error: e.message });
-        }
         server.log.error(e);
-        return res.status(500).send({
-          error: e.message,
+        return reply.status(500).send({
+          error: "Unable to create user",
         });
       }
     }
