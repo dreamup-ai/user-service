@@ -15,7 +15,7 @@ import { QueryCommand } from "@aws-sdk/client-dynamodb";
 
 const { userTable } = config.db;
 
-export const createUser = async (
+export const createOrUpdateUserByEmail = async (
   email: string,
   log: FastifyBaseLogger,
   extras: any = {}

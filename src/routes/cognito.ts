@@ -12,7 +12,7 @@ import {
 import { AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
 import config from "../config";
 import { makeSourceValidator } from "../middleware/validate-source";
-import { createUser } from "../crud";
+import { createOrUpdateUserByEmail } from "../crud";
 import { cognito } from "../clients/cognito";
 
 async function routes(server: FastifyInstance) {
@@ -61,7 +61,7 @@ async function routes(server: FastifyInstance) {
 
       const { sub, email } = userAttributes;
       try {
-        const user = await createUser(email, server.log, {
+        const user = await createOrUpdateUserByEmail(email, server.log, {
           "idp:cognito:id": sub,
         });
 

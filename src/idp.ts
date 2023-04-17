@@ -2,7 +2,11 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import oauthPlugin, { OAuth2Namespace } from "@fastify/oauth2";
 import config from "./config";
 import jwt from "jsonwebtoken";
-import { getUserByCognitoId, createUser, getUserByGoogleId } from "./crud";
+import {
+  getUserByCognitoId,
+  createOrUpdateUserByEmail,
+  getUserByGoogleId,
+} from "./crud";
 import { v4 as uuidv4 } from "uuid";
 import { oauthQueryStringSchema, OAuthQueryString } from "./types";
 
@@ -80,7 +84,7 @@ const routes = async (server: FastifyInstance) => {
       let user = await getUserByCognitoId(sub, server.log);
       if (!user) {
         try {
-          user = await createUser(email, server.log, {
+          user = await createOrUpdateUserByEmail(email, server.log, {
             "idp:cognito:id": sub,
           });
         } catch (err: any) {
@@ -170,7 +174,7 @@ const routes = async (server: FastifyInstance) => {
         let user = await getUserByGoogleId(sub.toString(), server.log);
         if (!user) {
           try {
-            user = await createUser(email, server.log, {
+            user = await createOrUpdateUserByEmail(email, server.log, {
               "idp:google:id": sub.toString(),
             });
           } catch (err: any) {
