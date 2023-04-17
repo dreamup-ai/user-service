@@ -125,6 +125,18 @@ const routes = async (server: FastifyInstance) => {
       startRedirectPath: config.idp.google.redirectPath,
       callbackUri: config.idp.google.callbackUri,
       scope: ["email", "profile"],
+      generateStateFunction: (
+        request: FastifyRequest<{ Querystring: { redirect: string } }>
+      ) => {
+        // get redirect from querystring
+        const { redirect } = request.query;
+        if (!redirect) {
+          throw new Error("No redirect URL provided");
+        }
+        return redirect;
+      },
+      checkStateFunction: (returnedState: string, callback: Function) =>
+        callback(),
     });
 
     server.get<{
@@ -168,7 +180,7 @@ const routes = async (server: FastifyInstance) => {
             });
           }
         }
-
+        const redirectUrl = request.query.state;
         const sessionToken = await issueSession(user.id, uuidv4());
         reply
           .setCookie("dreamup_session", sessionToken, {
@@ -178,7 +190,7 @@ const routes = async (server: FastifyInstance) => {
             sameSite: "strict",
             maxAge: 24 * 60 * 60 * 1000, // 1 day
           })
-          .redirect("/user/me");
+          .redirect(redirectUrl);
       }
     );
   }
