@@ -31,6 +31,10 @@ const {
   SESSION_PRIVATE_KEY_PATH,
   SESSION_PUBLIC_KEY_PATH,
   SESSION_DURATION = "24h",
+  GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET,
+  GOOGLE_REDIRECT_PATH = "/login/google",
+  GOOGLE_CALLBACK_URI = "http://localhost:3000/login/google/callback",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -79,6 +83,12 @@ type configType = {
       tokenHost: string;
       authPath: string;
       tokenPath: string;
+      redirectPath: string;
+      callbackUri: string;
+    };
+    google?: {
+      clientId: string;
+      clientSecret: string;
       redirectPath: string;
       callbackUri: string;
     };
@@ -155,6 +165,15 @@ const config: configType = {
 
 if (WEBHOOK_USER_CREATE) {
   config.webhooks.events["user.create"] = WEBHOOK_USER_CREATE;
+}
+
+if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
+  config.idp.google = {
+    clientId: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    redirectPath: GOOGLE_REDIRECT_PATH,
+    callbackUri: GOOGLE_CALLBACK_URI,
+  };
 }
 
 export default config;

@@ -313,3 +313,21 @@ export const SignatureHeaderSchema = {
 } as const;
 
 export type SignatureHeader = FromSchema<typeof SignatureHeaderSchema>;
+
+export const oauthQueryStringSchema = {
+  type: "object",
+  properties: {
+    code: {
+      type: "string",
+    },
+    state: {
+      type: "string",
+    },
+  },
+  additionalProperties: {
+    type: "string",
+  },
+  required: ["code", "state"],
+} as const;
+
+export type OAuthQueryString = FromSchema<typeof oauthQueryStringSchema>;

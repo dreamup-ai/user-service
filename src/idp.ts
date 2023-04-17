@@ -2,12 +2,14 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import oauthPlugin, { OAuth2Namespace } from "@fastify/oauth2";
 import config from "./config";
 import jwt from "jsonwebtoken";
-import { getUserByCognitoId, createUser } from "./crud";
+import { getUserByCognitoId, createUser, getUserByGoogleId } from "./crud";
 import { v4 as uuidv4 } from "uuid";
+import { oauthQueryStringSchema, OAuthQueryString } from "./types";
 
 declare module "fastify" {
   interface FastifyInstance {
     cognitoOAuth2: OAuth2Namespace;
+    googleOAuth2: OAuth2Namespace;
   }
 }
 
@@ -56,18 +58,12 @@ const routes = async (server: FastifyInstance) => {
   });
 
   server.get<{
-    Querystring: {
-      code: string;
-      state: string;
-    };
+    Querystring: OAuthQueryString;
   }>(
     "/login/cognito/callback",
     {
       schema: {
-        querystring: {
-          code: { type: "string" },
-          state: { type: "string" },
-        },
+        querystring: oauthQueryStringSchema,
       },
     },
     async (request, reply) => {
@@ -114,6 +110,78 @@ const routes = async (server: FastifyInstance) => {
         .redirect(redirectUrl);
     }
   );
+
+  // Set up google OAuth2
+  if (config.idp.google) {
+    server.register(oauthPlugin, {
+      name: "googleOAuth2",
+      credentials: {
+        client: {
+          id: config.idp.google.clientId,
+          secret: config.idp.google.clientSecret,
+        },
+        auth: oauthPlugin.GOOGLE_CONFIGURATION,
+      },
+      startRedirectPath: config.idp.google.redirectPath,
+      callbackUri: config.idp.google.callbackUri,
+      scope: ["email", "profile"],
+    });
+
+    server.get<{
+      Querystring: OAuthQueryString;
+      Response: any;
+    }>(
+      "/login/google/callback",
+      {
+        schema: {
+          querystring: oauthQueryStringSchema,
+          response: {
+            200: {
+              type: "object",
+              additionalProperties: {
+                type: "string",
+              },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        const { token } =
+          await server.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(
+            request
+          );
+        const decoded = jwt.decode(token.id_token) as jwt.JwtPayload;
+        if (!decoded || typeof decoded.sub !== "string") {
+          throw new Error("Invalid token");
+        }
+        const { sub, email } = decoded;
+        let user = await getUserByGoogleId(sub.toString(), server.log);
+        if (!user) {
+          try {
+            user = await createUser(email, server.log, {
+              "idp:google:id": sub.toString(),
+            });
+          } catch (err: any) {
+            server.log.error(err);
+            return reply.status(500).send({
+              error: "Internal server error",
+            });
+          }
+        }
+
+        const sessionToken = await issueSession(user.id, uuidv4());
+        reply
+          .setCookie("dreamup_session", sessionToken, {
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "strict",
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+          })
+          .redirect("/user/me");
+      }
+    );
+  }
 };
 
 export default routes;

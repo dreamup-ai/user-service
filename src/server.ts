@@ -38,6 +38,11 @@ export const build = async (
         error: message,
       });
     } else {
+      if (process.env.NODE_ENV === "production") {
+        server.log.error(error);
+      } else {
+        console.error(error);
+      }
       reply.status(statusCode || 500).send({
         error: message,
       });

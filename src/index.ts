@@ -1,6 +1,7 @@
+import config from "./config";
+
 import { DatabaseTable } from "db-dynamo";
 import { QueueManager } from "queue-sqs";
-import config from "./config";
 
 const userTable = new DatabaseTable(config.db.userTable);
 const queueManager = new QueueManager();
