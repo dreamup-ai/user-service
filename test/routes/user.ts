@@ -10,6 +10,17 @@ import cognitoPayload from "../fixtures/cognito-payload.json";
 import sinon from "sinon";
 import { cognito } from "../../src/clients/cognito";
 
+const sandbox = sinon.createSandbox();
+
+const getCognitoPayload = () => {
+  return JSON.parse(
+    JSON.stringify({
+      ...cognitoPayload,
+      userPoolId: config.idp.cognito.userPoolId,
+    })
+  );
+};
+
 describe("GET /user/me", () => {
   let server: FastifyInstance;
   let user: RawUser;
@@ -509,17 +520,6 @@ describe("GET /user/:id/email", () => {
   });
 });
 
-const sandbox = sinon.createSandbox();
-
-const payload = () => {
-  return JSON.parse(
-    JSON.stringify({
-      ...cognitoPayload,
-      userPoolId: config.idp.cognito.userPoolId,
-    })
-  );
-};
-
 describe("POST /user/cognito", () => {
   let server: FastifyInstance;
   let cognitoStub: sinon.SinonStub;
@@ -541,7 +541,7 @@ describe("POST /user/cognito", () => {
     const response = await server.inject({
       method: "POST",
       url: "/user/cognito",
-      payload: payload(),
+      payload: getCognitoPayload(),
     });
     expect(response.statusCode).to.equal(400);
     expect(response.json()).to.deep.equal({
@@ -550,7 +550,7 @@ describe("POST /user/cognito", () => {
   });
 
   it("should return 400 if invalid trigger source", async () => {
-    const body = payload();
+    const body = getCognitoPayload();
     body.triggerSource = "Invalid";
     const response = await server.inject({
       method: "POST",
@@ -567,7 +567,7 @@ describe("POST /user/cognito", () => {
   });
 
   it("should return 400 if invalid user pool ID", async () => {
-    const body = payload();
+    const body = getCognitoPayload();
     body.userPoolId = "Invalid";
     const response = await server.inject({
       method: "POST",
@@ -584,7 +584,7 @@ describe("POST /user/cognito", () => {
   });
 
   it("should return 401 if invalid signature", async () => {
-    const body = payload();
+    const body = getCognitoPayload();
     const response = await server.inject({
       method: "POST",
       url: "/user/cognito",
@@ -600,7 +600,7 @@ describe("POST /user/cognito", () => {
   });
 
   it("should return 201 if valid request", async () => {
-    const body = payload();
+    const body = getCognitoPayload();
     const response = await server.inject({
       method: "POST",
       url: "/user/cognito",
@@ -810,6 +810,141 @@ describe("PUT /user/me", () => {
     expect(response.statusCode).to.equal(400);
     expect(response.json()).to.deep.equal({
       error: 'body/username must match pattern "^[a-zA-Z0-9_\\-.]+$"',
+    });
+  });
+});
+
+describe("PUT /user/:id", () => {
+  let server: FastifyInstance;
+  let user: RawUser;
+
+  before(async () => {
+    server = await getServer();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+  });
+
+  it("should return the updated user if request is signed by dreamup internal", async () => {
+    const payload = {
+      preferences: {
+        width: 1024,
+        height: 1024,
+      },
+      username: "test-sweet",
+      features: {
+        "test-feature": true,
+      },
+    };
+    const response = await server.inject({
+      method: "PUT",
+      url: `/user/${user.id}`,
+      payload,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify(payload),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(200);
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        width: 1024,
+        height: 1024,
+      },
+      username: "test-sweet",
+      features: {
+        "test-feature": true,
+      },
+    });
+  });
+
+  it("should return 400 if request is not signed", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: `/user/${user.id}`,
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Missing signature",
+    });
+  });
+
+  it("should return 401 if request is signed with an invalid signature", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: `/user/${user.id}`,
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+      headers: {
+        [config.webhooks.signatureHeader]: "invalid",
+      },
+    });
+    expect(response.statusCode).to.equal(401);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid signature",
+    });
+  });
+
+  it("should return 400 if the username is invalid", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: `/user/${user.id}`,
+      payload: {
+        username: "test$%^!sweet",
+      },
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({
+            username: "test$%^!sweet",
+          }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: 'body/username must match pattern "^[a-zA-Z0-9_\\-.]+$"',
+    });
+  });
+
+  it("should return 404 if the user does not exist", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: `/user/${uuidv4()}`,
+      payload: {
+        username: "test-sweet",
+      },
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({
+            username: "test-sweet",
+          }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+
+    expect(response.statusCode).to.equal(404);
+    expect(response.json()).to.deep.equal({
+      error: "User Not Found",
     });
   });
 });

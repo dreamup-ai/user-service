@@ -14,6 +14,8 @@ import {
   cognitoNewUserPayloadSchema,
   UserUpdate,
   userUpdateSchema,
+  SystemUserUpdate,
+  systemUserUpdateSchema,
 } from "../types";
 import config from "../config";
 import { makeSessionValidator } from "../middleware/validate-session";
@@ -324,11 +326,51 @@ const routes = async (server: FastifyInstance) => {
       const { body } = req;
       try {
         const updatedUser = await updateUserById(userId, body);
+        if (!updatedUser) {
+          return reply.status(500).send({ error: "Unable to update user" });
+        }
         return updatedUser;
       } catch (e: any) {
-        if (e instanceof ResourceNotFoundException) {
-          return reply.status(404).send({ error: "Not Found" });
+        server.log.error(e);
+        return reply.status(500).send({
+          error: "Unable to update user",
+        });
+      }
+    }
+  );
+
+  server.put<{
+    Body: SystemUserUpdate;
+    Reply: RawUser | ErrorResponse;
+    Params: IdParam;
+    Headers: SignatureHeader;
+  }>(
+    "/user/:id",
+    {
+      schema: {
+        body: systemUserUpdateSchema,
+        params: idParamSchema,
+        headers: signatureHeaderSchema,
+        response: {
+          200: rawUserSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+          500: errorResponseSchema,
+        },
+      },
+      preValidation: [dreamupInternal],
+    },
+    async (req, reply) => {
+      const { id } = req.params;
+      const { body } = req;
+      try {
+        const updatedUser = await updateUserById(id, body);
+        if (!updatedUser) {
+          return reply.status(404).send({ error: "User Not Found" });
         }
+        return updatedUser;
+      } catch (e: any) {
         server.log.error(e);
         return reply.status(500).send({
           error: "Unable to update user",

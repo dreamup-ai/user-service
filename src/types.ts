@@ -90,6 +90,9 @@ export const appFeaturesSchema = {
       description: "The user can use the largest available starting image size",
     },
   },
+  additionalProperties: {
+    type: "boolean",
+  },
 } as const;
 
 export type AppFeatures = FromSchema<typeof appFeaturesSchema>;
@@ -97,7 +100,6 @@ export type AppFeatures = FromSchema<typeof appFeaturesSchema>;
 export const systemUserUpdateSchema = {
   type: "object",
   description: "The system-updatable fields of the user object",
-  required: ["email"],
   properties: {
     username: usernameSchema,
     preferences: userPreferencesSchema,
@@ -137,7 +139,7 @@ export const publicUserSchema = {
     {
       type: "object",
       description: "The User object",
-      required: ["id", "created"],
+      required: ["id", "created", "email"],
       properties: {
         id: {
           type: "string",

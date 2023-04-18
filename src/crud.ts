@@ -245,9 +245,17 @@ export const updateUserById = async (id: string, data: any) => {
     },
     ...getUpdateExpressionForArbitrarilyNestedUpdate(data),
     ReturnValues: "ALL_NEW",
+    ConditionExpression: "attribute_exists(id)",
   };
 
   const updateCmd = new UpdateItemCommand(updateParams);
-  const { Attributes } = await dynamodb.send(updateCmd);
-  return Item.toObject(Attributes);
+  try {
+    const { Attributes } = await dynamodb.send(updateCmd);
+    return Item.toObject(Attributes);
+  } catch (e: any) {
+    if (e.name === "ConditionalCheckFailedException") {
+      return null;
+    }
+    throw e;
+  }
 };
