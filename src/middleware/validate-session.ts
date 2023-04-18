@@ -19,11 +19,15 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
   ) {
     // Auth token can be in a cookie, or in the Authorization header as a bearer token
     const { authorization } = req.headers;
+
+    // We set a cookie with what idp the user last signed in with.
+    // We use this to redirect a user to the correct login flow
     const { [config.session.idpCookieName]: idpCookie = "cognito" } =
       req.cookies;
     let token: string;
     let code: number = 302;
     if (authorization) {
+      // If the user is using the API, we don't want to redirect them to the login page
       code = 401;
       const [authType, authToken] = authorization?.split(" ") ?? [null, null];
       if (authType.toLowerCase() !== "bearer") {
