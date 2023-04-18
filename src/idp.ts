@@ -89,7 +89,7 @@ const routes = async (server: FastifyInstance) => {
       }
 
       const { sub, email } = decoded;
-      let user = await getUserByCognitoId(sub, server.log);
+      let user = await getUserByCognitoId(sub);
       if (!user) {
         try {
           user = await createOrUpdateUserByEmail(email, server.log, {
@@ -188,7 +188,7 @@ const routes = async (server: FastifyInstance) => {
           throw new Error("Invalid token");
         }
         const { sub, email } = decoded;
-        let user = await getUserByGoogleId(sub.toString(), server.log);
+        let user = await getUserByGoogleId(sub.toString());
         if (!user) {
           try {
             user = await createOrUpdateUserByEmail(email, server.log, {
@@ -284,7 +284,7 @@ const routes = async (server: FastifyInstance) => {
         });
         const userInfoJson = await userInfo.json();
         const { id, email } = userInfoJson;
-        let user = await getUserByDiscordId(id, server.log);
+        let user = await getUserByDiscordId(id);
         if (!user) {
           try {
             user = await createOrUpdateUserByEmail(email, server.log, {

@@ -20,7 +20,7 @@ export const createOrUpdateUserByEmail = async (
   log: FastifyBaseLogger,
   extras: any = {}
 ) => {
-  const existingUser = await getUserByEmail(email, log);
+  const existingUser = await getUserByEmail(email);
   if (existingUser) {
     const updateParams = {
       TableName: userTable,
@@ -89,8 +89,7 @@ export const createOrUpdateUserByEmail = async (
 };
 
 export const getUserByCognitoId = async (
-  id: string,
-  log: FastifyBaseLogger
+  id: string
 ): Promise<RawUser | null> => {
   const queryCmd = new QueryCommand({
     TableName: userTable,
@@ -110,10 +109,7 @@ export const getUserByCognitoId = async (
   return null;
 };
 
-export const getUserById = async (
-  id: string,
-  log: FastifyBaseLogger
-): Promise<RawUser | null> => {
+export const getUserById = async (id: string): Promise<RawUser | null> => {
   const getCmd = new GetItemCommand({
     TableName: userTable,
     Key: Item.fromObject({ id }),
@@ -125,7 +121,7 @@ export const getUserById = async (
   return null;
 };
 
-export const getUserByGoogleId = async (id: string, log: FastifyBaseLogger) => {
+export const getUserByGoogleId = async (id: string) => {
   const queryCmd = new QueryCommand({
     TableName: userTable,
     IndexName: "google_id",
@@ -144,7 +140,7 @@ export const getUserByGoogleId = async (id: string, log: FastifyBaseLogger) => {
   return null;
 };
 
-export const getUserByEmail = async (email: string, log: FastifyBaseLogger) => {
+export const getUserByEmail = async (email: string) => {
   const queryCmd = new QueryCommand({
     TableName: userTable,
     IndexName: "email",
@@ -163,10 +159,7 @@ export const getUserByEmail = async (email: string, log: FastifyBaseLogger) => {
   return null;
 };
 
-export const getUserByDiscordId = async (
-  id: string,
-  log: FastifyBaseLogger
-) => {
+export const getUserByDiscordId = async (id: string) => {
   const queryCmd = new QueryCommand({
     TableName: userTable,
     IndexName: "discord_id",
