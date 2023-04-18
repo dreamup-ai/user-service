@@ -130,4 +130,22 @@ describe("GET /user/{id}", () => {
       },
     });
   });
+
+  it("should return 404 if the user does not exist", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.id}1`,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({ url: `/user/${user.id}1`, id: `${user.id}1` }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(404);
+    expect(response.json()).to.deep.equal({
+      error: "Not Found",
+    });
+  });
 });
