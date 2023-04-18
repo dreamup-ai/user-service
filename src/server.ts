@@ -10,10 +10,7 @@ import loginRoutes from "./routes/login";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import cookie from "@fastify/cookie";
 
-export const build = async (
-  userTable: IDatabaseTable,
-  queueManager: IQueueManager
-) => {
+export const build = async () => {
   const server = Fastify({
     logger: true,
   }).withTypeProvider<JsonSchemaToTsProvider>();

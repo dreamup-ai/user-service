@@ -6,6 +6,8 @@ import {
   DeleteTableCommand,
 } from "@aws-sdk/client-dynamodb";
 import { Cache } from "dynamo-tools";
+import { build } from "../src/server";
+import { FastifyInstance } from "fastify";
 
 const { COGNITO_PRIVATE_KEY_PATH, AWS_REGION, DYNAMODB_ENDPOINT, USER_TABLE } =
   process.env;
@@ -80,3 +82,11 @@ export function sign(
   const signature = crypto.sign("sha256", Buffer.from(payload), privateKey);
   return signature.toString("base64");
 }
+
+let server: FastifyInstance;
+export const getServer = async () => {
+  if (!server) {
+    server = await build();
+  }
+  return server;
+};

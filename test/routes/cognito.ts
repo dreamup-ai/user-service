@@ -1,19 +1,12 @@
 import { expect } from "chai";
-import { build } from "../../src/server";
 import { cognito } from "../../src/clients/cognito";
-import { sign, createTable, deleteTable, clearTable } from "../util";
+import { sign, createTable, deleteTable, clearTable, getServer } from "../util";
 import { FastifyInstance } from "fastify";
 import cognitoPayload from "../fixtures/cognito-payload.json";
 import sinon from "sinon";
 import config from "../../src/config";
 
 const sandbox = sinon.createSandbox();
-
-import { DatabaseTable } from "db-dynamo";
-import { QueueManager } from "queue-sqs";
-
-const userTable = new DatabaseTable(config.db.userTable);
-const queueManager = new QueueManager();
 
 const payload = () => {
   return JSON.parse(
@@ -29,18 +22,7 @@ describe("POST /user/cognito", () => {
   let cognitoStub: sinon.SinonStub;
 
   before(async () => {
-    await userTable.connect();
-    server = await build(userTable, queueManager);
-    try {
-      await createTable();
-    } catch (e: any) {
-      if (e.code !== "ResourceInUseException") {
-        throw e;
-      }
-    }
-  });
-  after(async () => {
-    await deleteTable();
+    server = await getServer();
   });
 
   beforeEach(async () => {
