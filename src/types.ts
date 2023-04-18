@@ -303,16 +303,17 @@ export type CognitoNewUserPayload = FromSchema<
   typeof cognitoNewUserPayloadSchema
 >;
 
-export const SignatureHeaderSchema = {
+export const signatureHeaderSchema = {
   type: "object",
   properties: {},
-  additionalProperties: {
-    type: "string",
-    pattern: "^x-w+-signature$",
+  patternProperties: {
+    "^x-w+-signature$": {
+      type: "string",
+    },
   },
 } as const;
 
-export type SignatureHeader = FromSchema<typeof SignatureHeaderSchema>;
+export type SignatureHeader = FromSchema<typeof signatureHeaderSchema>;
 
 export const oauthQueryStringSchema = {
   type: "object",

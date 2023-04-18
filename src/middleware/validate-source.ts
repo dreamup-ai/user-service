@@ -20,7 +20,9 @@ export const makeSourceValidator = (publicKey: KeyObject, header: string) => {
     // Request must be valid
     const isVerified = crypto.verify(
       "sha256",
-      Buffer.from(JSON.stringify(req.body)),
+      Buffer.from(
+        JSON.stringify(req.body || { url: req.url, ...(req.params || {}) })
+      ),
       publicKey,
       Buffer.from(signature, "base64")
     );

@@ -8,6 +8,8 @@ import {
   rawUserSchema,
   IdParam,
   idParamSchema,
+  SignatureHeader,
+  signatureHeaderSchema,
 } from "../types";
 import config from "../config";
 import { makeSessionValidator } from "../middleware/validate-session";
@@ -60,11 +62,13 @@ const routes = async (server: FastifyInstance) => {
   server.get<{
     Reply: RawUser | ErrorResponse;
     Params: IdParam;
+    Headers: SignatureHeader;
   }>(
-    "/user/{id}",
+    "/user/:id",
     {
       schema: {
         params: idParamSchema,
+        headers: signatureHeaderSchema,
         response: {
           200: rawUserSchema,
           401: errorResponseSchema,
@@ -91,7 +95,7 @@ const routes = async (server: FastifyInstance) => {
     Reply: RawUser | ErrorResponse;
     Params: IdParam;
   }>(
-    "/user/{id}/cognito",
+    "/user/:id/cognito",
     {
       schema: {
         params: idParamSchema,
@@ -121,7 +125,7 @@ const routes = async (server: FastifyInstance) => {
     Reply: RawUser | ErrorResponse;
     Params: IdParam;
   }>(
-    "/user/{id}/google",
+    "/user/:id/google",
     {
       schema: {
         params: idParamSchema,
@@ -151,7 +155,7 @@ const routes = async (server: FastifyInstance) => {
     Reply: RawUser | ErrorResponse;
     Params: IdParam;
   }>(
-    "/user/{id}/discord",
+    "/user/:id/discord",
     {
       schema: {
         params: idParamSchema,
@@ -181,7 +185,7 @@ const routes = async (server: FastifyInstance) => {
     Reply: RawUser | ErrorResponse;
     Params: IdParam;
   }>(
-    "/user/{id}/email",
+    "/user/:id/email",
     {
       schema: {
         params: idParamSchema,

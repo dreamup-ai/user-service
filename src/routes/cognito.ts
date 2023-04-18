@@ -7,6 +7,7 @@ import {
   cognitoNewUserPayloadSchema,
   ErrorResponse,
   errorResponseSchema,
+  signatureHeaderSchema,
 } from "../types";
 
 import { AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
@@ -25,6 +26,7 @@ async function routes(server: FastifyInstance) {
     {
       schema: {
         body: cognitoNewUserPayloadSchema,
+        headers: signatureHeaderSchema,
         response: {
           201: publicUserSchema,
           400: errorResponseSchema,
