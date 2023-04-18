@@ -397,3 +397,15 @@ export interface DiscordUser {
   email: string;
   verified: string;
 }
+
+export const idParamSchema = {
+  type: "object",
+  required: ["id"],
+  properties: {
+    id: {
+      type: "string",
+    },
+  },
+} as const;
+
+export type IdParam = FromSchema<typeof idParamSchema>;
