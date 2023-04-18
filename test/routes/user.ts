@@ -3,9 +3,12 @@ import config from "../../src/config";
 import { getServer, clearTable, sign } from "../util";
 import { FastifyInstance } from "fastify";
 import { issueSession } from "../../src/routes/login";
-import { createOrUpdateUserByEmail } from "../../src/crud";
+import { createOrUpdateUserByEmail, getUserById } from "../../src/crud";
 import { PublicUser, RawUser } from "../../src/types";
 import { v4 as uuidv4 } from "uuid";
+import cognitoPayload from "../fixtures/cognito-payload.json";
+import sinon from "sinon";
+import { cognito } from "../../src/clients/cognito";
 
 describe("GET /user/me", () => {
   let server: FastifyInstance;
@@ -502,6 +505,311 @@ describe("GET /user/:id/email", () => {
     expect(response.statusCode).to.equal(404);
     expect(response.json()).to.deep.equal({
       error: "Not Found",
+    });
+  });
+});
+
+const sandbox = sinon.createSandbox();
+
+const payload = () => {
+  return JSON.parse(
+    JSON.stringify({
+      ...cognitoPayload,
+      userPoolId: config.idp.cognito.userPoolId,
+    })
+  );
+};
+
+describe("POST /user/cognito", () => {
+  let server: FastifyInstance;
+  let cognitoStub: sinon.SinonStub;
+
+  before(async () => {
+    server = await getServer();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
+    sandbox.restore();
+    cognitoStub = sandbox.stub(cognito, "send").resolves();
+  });
+
+  afterEach(() => {
+    sandbox.restore();
+  });
+  it("should return 400 if missing signature", async () => {
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      payload: payload(),
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Missing signature",
+    });
+  });
+
+  it("should return 400 if invalid trigger source", async () => {
+    const body = payload();
+    body.triggerSource = "Invalid";
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
+      },
+      payload: body,
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid trigger source",
+    });
+  });
+
+  it("should return 400 if invalid user pool ID", async () => {
+    const body = payload();
+    body.userPoolId = "Invalid";
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
+      },
+      payload: body,
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid user pool ID",
+    });
+  });
+
+  it("should return 401 if invalid signature", async () => {
+    const body = payload();
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.signatureHeader]: "Invalid",
+      },
+      payload: body,
+    });
+    expect(response.statusCode).to.equal(401);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid signature",
+    });
+  });
+
+  it("should return 201 if valid request", async () => {
+    const body = payload();
+    const response = await server.inject({
+      method: "POST",
+      url: "/user/cognito",
+      headers: {
+        [config.idp.cognito.signatureHeader]: sign(JSON.stringify(body)),
+      },
+      payload: body,
+    });
+    const respBody = response.json();
+    expect(response.statusCode).to.equal(201);
+
+    expect(respBody).to.have.property("id");
+    expect(respBody.created).to.be.a("number");
+    expect(respBody.email).to.equal(body.request.userAttributes.email);
+    expect(respBody.preferences).to.deep.equal({ width: 512, height: 512 });
+    expect(respBody.features).to.deep.equal({});
+
+    expect(cognitoStub.calledOnce).to.be.true;
+  });
+});
+
+describe("PUT /user/me", () => {
+  let server: FastifyInstance;
+  let user: PublicUser;
+
+  before(async () => {
+    server = await getServer();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+  });
+
+  it("should return the updated user if request is submitted with a valid cookie", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      cookies: {
+        [config.session.cookieName]: issueSession(user.id, uuidv4()),
+      },
+    });
+    expect(response.statusCode).to.equal(200);
+    delete user._queue;
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        width: 1024,
+        height: 1024,
+      },
+      username: "test-sweet",
+    });
+  });
+
+  it("should return the updated user if request is submitted with a valid auth header", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      headers: {
+        Authorization: `Bearer ${issueSession(user.id, uuidv4())}`,
+      },
+    });
+    expect(response.statusCode).to.equal(200);
+    delete user._queue;
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        width: 1024,
+        height: 1024,
+      },
+      username: "test-sweet",
+    });
+  });
+
+  it("should return 302 if request is submitted with an invalid cookie", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      cookies: {
+        [config.session.cookieName]: "invalid",
+      },
+    });
+    expect(response.statusCode).to.equal(302);
+  });
+
+  it("should return 401 if request is submitted with an invalid auth header", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      headers: {
+        Authorization: "Bearer invalid",
+      },
+    });
+    expect(response.statusCode).to.equal(401);
+    expect(response.json()).to.deep.equal({
+      error: "jwt malformed",
+    });
+  });
+
+  it("should return 500 if presented with a valid session for a non-existent user", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      cookies: {
+        [config.session.cookieName]: issueSession(uuidv4(), uuidv4()),
+      },
+    });
+    expect(response.statusCode).to.equal(500);
+    expect(response.json()).to.deep.equal({
+      error: "Unable to update user",
+    });
+  });
+
+  it("ignores disallowed fields in the request body", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        iceCreamFlavor: "chocolate",
+        preferences: {
+          width: 1024,
+          height: 1024,
+        },
+        username: "test-sweet",
+      },
+
+      cookies: {
+        [config.session.cookieName]: issueSession(user.id, uuidv4()),
+      },
+    });
+
+    expect(response.statusCode).to.equal(200);
+    delete user._queue;
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        width: 1024,
+        height: 1024,
+      },
+      username: "test-sweet",
+    });
+
+    const updatedUser = await getUserById(user.id);
+    expect(updatedUser).to.not.have.property("iceCreamFlavor");
+  });
+
+  it("should return 400 if the username is invalid", async () => {
+    const response = await server.inject({
+      method: "PUT",
+      url: "/user/me",
+
+      payload: {
+        username: "test$%^!sweet",
+      },
+
+      cookies: {
+        [config.session.cookieName]: issueSession(user.id, uuidv4()),
+      },
+    });
+
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: 'body/username must match pattern "^[a-zA-Z0-9_\\-.]+$"',
     });
   });
 });

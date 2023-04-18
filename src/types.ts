@@ -63,12 +63,20 @@ export const usernameSchema = {
 
 export type Username = FromSchema<typeof usernameSchema>;
 
+/**
+ * ONLY the fields that a user can update themselves
+ */
 export const userUpdateSchema = {
   type: "object",
   properties: {
     username: usernameSchema,
     preferences: userPreferencesSchema,
   },
+
+  description: "The fields that can be updated by the user",
+
+  // No other fields can be updated and should be rejected
+  additionalProperties: false,
 } as const;
 
 export type UserUpdate = FromSchema<typeof userUpdateSchema>;
@@ -87,41 +95,38 @@ export const appFeaturesSchema = {
 export type AppFeatures = FromSchema<typeof appFeaturesSchema>;
 
 export const systemUserUpdateSchema = {
-  allOf: [
-    userUpdateSchema,
-    {
+  type: "object",
+  description: "The system-updatable fields of the user object",
+  required: ["email"],
+  properties: {
+    username: usernameSchema,
+    preferences: userPreferencesSchema,
+    features: appFeaturesSchema,
+    email: {
+      type: "string",
+      format: "email",
+      description: "The login email for the user. Not for public display",
+    },
+    terms: {
       type: "object",
-      description: "The system-updatable fields of the user object",
-      required: ["email"],
+      description: "The user's terms of service acceptance",
       properties: {
-        features: appFeaturesSchema,
-        email: {
-          type: "string",
-          format: "email",
-          description: "The login email for the user. Not for public display",
+        accepted: {
+          type: "boolean",
+          description: "Whether the user has accepted the terms",
         },
-        terms: {
-          type: "object",
-          description: "The user's terms of service acceptance",
-          properties: {
-            accepted: {
-              type: "boolean",
-              description: "Whether the user has accepted the terms",
-            },
-            accepted_at: {
-              type: "integer",
-              description:
-                "The unix timestamp in ms of when the user accepted the terms",
-            },
-            version: {
-              type: "string",
-              description: "The version of the terms the user accepted",
-            },
-          },
+        accepted_at: {
+          type: "integer",
+          description:
+            "The unix timestamp in ms of when the user accepted the terms",
+        },
+        version: {
+          type: "string",
+          description: "The version of the terms the user accepted",
         },
       },
     },
-  ],
+  },
 } as const;
 
 export type SystemUserUpdate = FromSchema<typeof systemUserUpdateSchema>;

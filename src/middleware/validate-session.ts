@@ -55,7 +55,6 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
       // Set the user ID and session ID on the request
       req.user = { userId, sessionId };
     } catch (e: any) {
-      console.error(e);
       if (code === 401) {
         return reply.status(code).send({ error: e.message });
       }

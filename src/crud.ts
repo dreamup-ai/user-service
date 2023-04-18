@@ -177,3 +177,77 @@ export const getUserByDiscordId = async (id: string) => {
   }
   return null;
 };
+
+/**
+ * Returns an object with the UpdateExpression, ExpressionAttributeNames, and ExpressionAttributeValues
+ * for an arbitrarily nested update. This is useful for updating nested objects in DynamoDB.
+ *
+ * Example:
+ * { some: { deeply: { nested: { value: 1 } } } }
+ *
+ * Will return:
+ * {
+ *  UpdateExpression: SET #K0.#K1.#K2.#K3 = :val0,
+ *  ExpressionAttributeNames: { "#K0": "some", "#K1": "deeply", "#K2": "nested", "#K3": "value" },
+ *  ExpressionAttributeValues: { ":val0": { N: "1" } }
+ * }
+ *
+ * @param data
+ * @returns
+ */
+export const getUpdateExpressionForArbitrarilyNestedUpdate = (data: any) => {
+  let UpdateExpression: string = "";
+  const ExpressionAttributeNames: any = {};
+  const ExpressionAttributeValues: any = {};
+  const subExpressions: string[] = [];
+
+  const recurse = (obj: any, path: string[] = []) => {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+      const i = Object.keys(ExpressionAttributeNames).length;
+      const keyVar = `#K${i}`;
+      ExpressionAttributeNames[keyVar] = key;
+
+      if (typeof value === "object") {
+        /**
+         * Recurse into the nested object, keeping a path like
+         * ["#K0", "#K1", "#K2", "#K3"]
+         */
+        recurse(value, [...path, keyVar]);
+      } else {
+        const i = Object.keys(ExpressionAttributeValues).length;
+        ExpressionAttributeValues[`:val${i}`] = Item.fromObject(value);
+
+        /**
+         * The update expression includes the full nested path, e.g.
+         * #K0.#K1.#K2.#K3 = :val0
+         * */
+        subExpressions.push(`${[...path, keyVar].join(".")} = :val${i}`);
+      }
+    });
+  };
+  recurse(data);
+
+  UpdateExpression = `SET ${subExpressions.join(", ")}`;
+
+  return {
+    UpdateExpression,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+  };
+};
+
+export const updateUserById = async (id: string, data: any) => {
+  const updateParams = {
+    TableName: userTable,
+    Key: {
+      id: { S: id },
+    },
+    ...getUpdateExpressionForArbitrarilyNestedUpdate(data),
+    ReturnValues: "ALL_NEW",
+  };
+
+  const updateCmd = new UpdateItemCommand(updateParams);
+  const { Attributes } = await dynamodb.send(updateCmd);
+  return Item.toObject(Attributes);
+};

@@ -12,6 +12,8 @@ import {
   signatureHeaderSchema,
   CognitoNewUserPayload,
   cognitoNewUserPayloadSchema,
+  UserUpdate,
+  userUpdateSchema,
 } from "../types";
 import config from "../config";
 import { makeSessionValidator } from "../middleware/validate-session";
@@ -22,15 +24,19 @@ import {
   getUserByEmail,
   getUserByGoogleId,
   getUserById,
+  updateUserById,
 } from "../crud";
 import { makeSourceValidator } from "../middleware/validate-source";
 import { AdminUpdateUserAttributesCommand } from "@aws-sdk/client-cognito-identity-provider";
 import { cognito } from "../clients/cognito";
+import { ResourceNotFoundException } from "@aws-sdk/client-dynamodb";
 
 const dreamupInternal = makeSourceValidator(
   config.webhooks.publicKey,
   config.webhooks.signatureHeader
 );
+
+const sessionValidator = makeSessionValidator(config.session.publicKey);
 
 const routes = async (server: FastifyInstance) => {
   server.get<{
@@ -44,7 +50,7 @@ const routes = async (server: FastifyInstance) => {
           401: errorResponseSchema,
         },
       },
-      preValidation: [makeSessionValidator(config.session.publicKey)],
+      preValidation: [sessionValidator],
     },
     async (request, reply) => {
       const { user } = request;
@@ -286,6 +292,47 @@ const routes = async (server: FastifyInstance) => {
         server.log.error(e);
         return reply.status(500).send({
           error: "Unable to create user",
+        });
+      }
+    }
+  );
+
+  server.put<{
+    Body: UserUpdate;
+    Reply: PublicUser | ErrorResponse;
+  }>(
+    "/user/me",
+    {
+      schema: {
+        body: userUpdateSchema,
+        response: {
+          200: publicUserSchema,
+          400: errorResponseSchema,
+          401: errorResponseSchema,
+          404: errorResponseSchema,
+          500: errorResponseSchema,
+        },
+      },
+      preValidation: [sessionValidator],
+    },
+    async (req, reply) => {
+      const { user } = req;
+      if (!user) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const { userId } = user;
+      const { body } = req;
+      console.log(body);
+      try {
+        const updatedUser = await updateUserById(userId, body);
+        return updatedUser;
+      } catch (e: any) {
+        if (e instanceof ResourceNotFoundException) {
+          return reply.status(404).send({ error: "Not Found" });
+        }
+        server.log.error(e);
+        return reply.status(500).send({
+          error: "Unable to update user",
         });
       }
     }
