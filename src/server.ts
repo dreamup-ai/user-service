@@ -44,10 +44,10 @@ export const build = async (opts: FastifyServerOptions) => {
     }
   });
 
-  await server.register(cookie);
+  server.register(cookie);
 
-  await server.register(loginRoutes);
-  await server.register(userRoutes);
+  server.register(loginRoutes);
+  server.register(userRoutes);
 
   return server;
 };

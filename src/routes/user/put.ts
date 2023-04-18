@@ -21,7 +21,7 @@ import {
   rawUserSchema,
 } from "../../types";
 
-const routes = async (server: FastifyInstance) => {
+const routes = (server: FastifyInstance, _: any, done: Function) => {
   server.put<{
     Body: UserUpdate;
     Reply: PublicUser | ErrorResponse;
@@ -101,6 +101,8 @@ const routes = async (server: FastifyInstance) => {
       }
     }
   );
+
+  done();
 };
 
 export default routes;

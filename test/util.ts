@@ -17,52 +17,55 @@ const cache = new Cache({
   endpoint: DYNAMODB_ENDPOINT,
 });
 
-export const createTable = async () => {
-  await cache.client.send(
-    new CreateTableCommand({
-      TableName: USER_TABLE,
-      AttributeDefinitions: [
-        {
-          AttributeName: "id",
-          AttributeType: "S",
-        },
-        {
-          AttributeName: "email",
-          AttributeType: "S",
-        },
-      ],
-      KeySchema: [
-        {
-          AttributeName: "id",
-          KeyType: "HASH",
-        },
-      ],
-      GlobalSecondaryIndexes: [
-        {
-          IndexName: "email",
-          KeySchema: [
-            {
-              AttributeName: "email",
-              KeyType: "HASH",
-            },
-          ],
-          Projection: {
-            ProjectionType: "ALL",
-          },
-        },
-      ],
-      BillingMode: "PAY_PER_REQUEST",
-    })
-  );
-};
+import { createTable, deleteTable } from "../init-local-dynamo";
+export { createTable, deleteTable };
 
-export const deleteTable = async () => {
-  await cache.client.send(
-    new DeleteTableCommand({
-      TableName: USER_TABLE,
-    })
-  );
-};
+// export const createTable = async () => {
+//   await cache.client.send(
+//     new CreateTableCommand({
+//       TableName: USER_TABLE,
+//       AttributeDefinitions: [
+//         {
+//           AttributeName: "id",
+//           AttributeType: "S",
+//         },
+//         {
+//           AttributeName: "email",
+//           AttributeType: "S",
+//         },
+//       ],
+//       KeySchema: [
+//         {
+//           AttributeName: "id",
+//           KeyType: "HASH",
+//         },
+//       ],
+//       GlobalSecondaryIndexes: [
+//         {
+//           IndexName: "email",
+//           KeySchema: [
+//             {
+//               AttributeName: "email",
+//               KeyType: "HASH",
+//             },
+//           ],
+//           Projection: {
+//             ProjectionType: "ALL",
+//           },
+//         },
+//       ],
+//       BillingMode: "PAY_PER_REQUEST",
+//     })
+//   );
+// };
+
+// export const deleteTable = async () => {
+//   await cache.client.send(
+//     new DeleteTableCommand({
+//       TableName: USER_TABLE,
+//     })
+//   );
+// };
 
 export const clearTable = async () => {
   await cache.deleteAll({ table: USER_TABLE });
@@ -90,3 +93,15 @@ export const getServer = async () => {
   }
   return server;
 };
+
+before(async () => {
+  try {
+    await createTable();
+  } catch (e) {
+    // ignore
+  }
+});
+
+after(async () => {
+  await deleteTable();
+});

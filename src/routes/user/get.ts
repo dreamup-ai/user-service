@@ -23,7 +23,7 @@ import {
   dreamupUserSession,
 } from "../../middleware/audiences";
 
-const routes = async (server: FastifyInstance) => {
+const routes = (server: FastifyInstance, _: any, done: Function) => {
   server.get<{
     Reply: PublicUser | ErrorResponse;
   }>(
@@ -208,6 +208,8 @@ const routes = async (server: FastifyInstance) => {
       return userRecord;
     }
   );
+
+  done();
 };
 
 export default routes;

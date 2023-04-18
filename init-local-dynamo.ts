@@ -109,13 +109,13 @@ export const createTable = async () => {
     );
   } catch (e: any) {
     if (e.name === "ResourceInUseException") {
-      console.log("Table already exists, deleting");
-      await deleteTable();
-      console.log("Try again");
+      // console.log("Table already exists, deleting");
+      // await deleteTable();
+      // console.log("Try again");
     } else {
       throw e;
     }
   }
 };
 
-createTable().then(() => console.log("done"));
+// createTable().then(() => console.log("done"));

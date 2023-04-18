@@ -15,7 +15,7 @@ import {
   errorResponseSchema,
 } from "../../types";
 
-const routes = async (server: FastifyInstance) => {
+const routes = (server: FastifyInstance, _: any, done: Function) => {
   server.post<{
     Body: CognitoNewUserPayload;
     Headers: SignatureHeader;
@@ -85,6 +85,8 @@ const routes = async (server: FastifyInstance) => {
       }
     }
   );
+
+  done();
 };
 
 export default routes;

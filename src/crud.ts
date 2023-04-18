@@ -4,6 +4,7 @@ import { sendWebhook } from "./webhooks";
 import { FastifyBaseLogger } from "fastify";
 import { client as dynamodb } from "./clients/dynamo";
 import {
+  DeleteItemCommand,
   GetItemCommand,
   PutItemCommand,
   UpdateItemCommand,
@@ -258,4 +259,14 @@ export const updateUserById = async (id: string, data: any) => {
     }
     throw e;
   }
+};
+
+export const deleteUserById = async (id: string) => {
+  const deleteCmd = new DeleteItemCommand({
+    TableName: userTable,
+    Key: {
+      id: { S: id },
+    },
+  });
+  await dynamodb.send(deleteCmd);
 };
