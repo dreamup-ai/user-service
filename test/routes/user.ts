@@ -71,7 +71,7 @@ describe("GET /user/me", () => {
   });
 });
 
-describe("GET /user/{id}", () => {
+describe("GET /user/:id", () => {
   let server: FastifyInstance;
   let user: RawUser;
   before(async () => {
@@ -139,6 +139,97 @@ describe("GET /user/{id}", () => {
       headers: {
         [config.webhooks.signatureHeader]: sign(
           JSON.stringify({ url: `/user/${user.id}1`, id: `${user.id}1` }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(404);
+    expect(response.json()).to.deep.equal({
+      error: "Not Found",
+    });
+  });
+});
+
+describe("GET /user/:id/cognito", () => {
+  let server: FastifyInstance;
+  let user: RawUser;
+  before(async () => {
+    server = await getServer();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
+  });
+
+  it("should return 400 if the request has no signature", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log, {
+      "idp:cognito:id": "test",
+    });
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.id}/cognito`,
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Missing signature",
+    });
+  });
+
+  it("should return 401 if the request has an invalid signature", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log, {
+      "idp:cognito:id": "test",
+    });
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.id}/cognito`,
+      headers: {
+        [config.webhooks.signatureHeader]: "Invalid",
+      },
+    });
+    expect(response.statusCode).to.equal(401);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid signature",
+    });
+  });
+
+  it("should return the user with a correctly signed request", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log, {
+      "idp:cognito:id": "test",
+    });
+
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/test/cognito`,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({ url: `/user/test/cognito`, id: "test" }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(200);
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        height: 512,
+        width: 512,
+      },
+    });
+  });
+
+  it("should return 404 if the user does not exist", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log, {
+      "idp:cognito:id": "test",
+    });
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.id}1/cognito`,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({
+            url: `/user/${user.id}1/cognito`,
+            id: `${user.id}1`,
+          }),
           config.webhooks.privateKey
         ),
       },

@@ -93,19 +93,21 @@ const routes = async (server: FastifyInstance) => {
    */
   server.get<{
     Reply: RawUser | ErrorResponse;
+    Headers: SignatureHeader;
     Params: IdParam;
   }>(
     "/user/:id/cognito",
     {
       schema: {
         params: idParamSchema,
+        headers: signatureHeaderSchema,
         response: {
           200: rawUserSchema,
           401: errorResponseSchema,
           404: errorResponseSchema,
         },
       },
-      preValidation: [],
+      preValidation: [dreamupInternal],
     },
     async (request, reply) => {
       const { id } = request.params;
@@ -123,12 +125,14 @@ const routes = async (server: FastifyInstance) => {
    */
   server.get<{
     Reply: RawUser | ErrorResponse;
+    Headers: SignatureHeader;
     Params: IdParam;
   }>(
     "/user/:id/google",
     {
       schema: {
         params: idParamSchema,
+        headers: signatureHeaderSchema,
         response: {
           200: rawUserSchema,
           401: errorResponseSchema,
@@ -153,12 +157,14 @@ const routes = async (server: FastifyInstance) => {
    */
   server.get<{
     Reply: RawUser | ErrorResponse;
+    Headers: SignatureHeader;
     Params: IdParam;
   }>(
     "/user/:id/discord",
     {
       schema: {
         params: idParamSchema,
+        headers: signatureHeaderSchema,
         response: {
           200: rawUserSchema,
           401: errorResponseSchema,

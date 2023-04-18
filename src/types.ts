@@ -159,15 +159,15 @@ export const privateUserFieldsSchema = {
   type: "object",
   required: ["_queue"],
   properties: {
-    "_idp:cognito:id": {
+    "idp:cognito:id": {
       type: "string",
       description: "The user's 'sub' (unique id) in Cognito",
     },
-    "_idp:google:id": {
+    "idp:google:id": {
       type: "string",
       description: "The user's unique id in Google",
     },
-    "_idp:discord:id": {
+    "idp:discord:id": {
       type: "string",
       description: "The user's unique id in Discord",
     },
