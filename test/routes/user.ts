@@ -420,3 +420,88 @@ describe("GET /user/:id/discord", () => {
     });
   });
 });
+
+describe("GET /user/:id/email", () => {
+  let server: FastifyInstance;
+  let user: RawUser;
+  before(async () => {
+    server = await getServer();
+  });
+
+  beforeEach(async () => {
+    await clearTable();
+  });
+
+  it("should return 400 if the request has no signature", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.email}/email`,
+    });
+    expect(response.statusCode).to.equal(400);
+    expect(response.json()).to.deep.equal({
+      error: "Missing signature",
+    });
+  });
+
+  it("should return 401 if the request has an invalid signature", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.email}/email`,
+      headers: {
+        [config.webhooks.signatureHeader]: "Invalid",
+      },
+    });
+    expect(response.statusCode).to.equal(401);
+    expect(response.json()).to.deep.equal({
+      error: "Invalid signature",
+    });
+  });
+
+  it("should return the user with a correctly signed request", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/test@test.com/email`,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({
+            url: `/user/test@test.com/email`,
+            id: "test@test.com",
+          }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(200);
+    expect(response.json()).to.deep.equal({
+      ...user,
+      preferences: {
+        height: 512,
+        width: 512,
+      },
+    });
+  });
+
+  it("should return 404 if the user does not exist", async () => {
+    user = await createOrUpdateUserByEmail("test@test.com", server.log);
+    const response = await server.inject({
+      method: "GET",
+      url: `/user/${user.email}1/email`,
+      headers: {
+        [config.webhooks.signatureHeader]: sign(
+          JSON.stringify({
+            url: `/user/${user.email}1/email`,
+            id: `${user.email}1`,
+          }),
+          config.webhooks.privateKey
+        ),
+      },
+    });
+    expect(response.statusCode).to.equal(404);
+    expect(response.json()).to.deep.equal({
+      error: "Not Found",
+    });
+  });
+});
