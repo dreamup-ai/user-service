@@ -4,7 +4,6 @@ import config from "./config";
 
 import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
-import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
 import loginRoutes from "./routes/login";
 import cookie from "@fastify/cookie";
@@ -50,7 +49,6 @@ export const build = async () => {
   await server.register(cookie);
 
   await server.register(loginRoutes);
-  await server.register(cognitoRoutes);
   await server.register(userRoutes);
 
   return server;
