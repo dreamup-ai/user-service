@@ -23,20 +23,22 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
     if (authorization) {
       const [authType, authToken] = authorization?.split(" ") ?? [null, null];
       if (authType.toLowerCase() !== "bearer") {
-        return res.redirect(302, `/login/cognito?redirect=${req.url}`);
+        return res.redirect(401, `/login/cognito?redirect=${req.url}`);
       }
       token = authToken;
     } else {
-      const { dreamup_session: cookieToken } = req.cookies;
+      const { [config.session.cookieName]: cookieToken } = req.cookies;
       if (!cookieToken) {
-        return res.redirect(302, `/login/cognito?redirect=${req.url}`);
+        console.log("No cookie token");
+        console.log(req.cookies);
+        return res.redirect(401, `/login/cognito?redirect=${req.url}`);
       }
       token = cookieToken;
     }
 
     // Token must be valid
     try {
-      const decoded = jwt.verify(token, config.session.publicKey, {
+      const decoded = jwt.verify(token, publicKey, {
         algorithms: ["RS256"],
       }) as jwt.JwtPayload;
       const { userId, sessionId } = decoded as {
@@ -47,7 +49,8 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
       // Set the user ID and session ID on the request
       req.user = { userId, sessionId };
     } catch (e: any) {
-      return res.redirect(302, `/login/cognito?redirect=${req.url}`);
+      console.error(e);
+      return res.redirect(401, `/login/cognito?redirect=${req.url}`);
     }
   };
 };

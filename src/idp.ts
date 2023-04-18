@@ -6,14 +6,22 @@ import {
   getUserByCognitoId,
   createOrUpdateUserByEmail,
   getUserByGoogleId,
+  getUserByDiscordId,
 } from "./crud";
 import { v4 as uuidv4 } from "uuid";
-import { oauthQueryStringSchema, OAuthQueryString } from "./types";
+import {
+  oauthQueryStringSchema,
+  OAuthQueryString,
+  DiscordToken,
+  GoogleToken,
+  CognitoToken,
+} from "./types";
 
 declare module "fastify" {
   interface FastifyInstance {
     cognitoOAuth2: OAuth2Namespace;
     googleOAuth2: OAuth2Namespace;
+    discordOAuth2: OAuth2Namespace;
   }
 }
 
@@ -75,7 +83,7 @@ const routes = async (server: FastifyInstance) => {
         await server.cognitoOAuth2.getAccessTokenFromAuthorizationCodeFlow(
           request
         );
-      const decoded = jwt.decode(token.id_token) as jwt.JwtPayload;
+      const decoded = jwt.decode(token.id_token) as CognitoToken;
       if (!decoded || typeof decoded.sub !== "string") {
         throw new Error("Invalid token");
       }
@@ -97,18 +105,18 @@ const routes = async (server: FastifyInstance) => {
 
       // Get the redirect URL from the state
       const redirectUrl = request.query.state;
-      const sessionToken = await issueSession(user.id, uuidv4());
+      const sessionToken = issueSession(user.id, uuidv4());
 
       // console.log(redirectUrl, sessionToken);
 
       // Set the session token as a cookie named dreamup_session,
       // and redirect to the redirect URL
       reply
-        .setCookie("dreamup_session", sessionToken, {
+        .setCookie(config.session.cookieName, sessionToken, {
           path: "/",
           httpOnly: true,
           secure: true,
-          sameSite: "strict",
+          sameSite: "lax",
           maxAge: 24 * 60 * 60 * 1000, // 1 day
         })
         .redirect(redirectUrl);
@@ -166,7 +174,7 @@ const routes = async (server: FastifyInstance) => {
           await server.googleOAuth2.getAccessTokenFromAuthorizationCodeFlow(
             request
           );
-        const decoded = jwt.decode(token.id_token) as jwt.JwtPayload;
+        const decoded = jwt.decode(token.id_token) as GoogleToken;
         if (!decoded || typeof decoded.sub !== "string") {
           throw new Error("Invalid token");
         }
@@ -185,13 +193,100 @@ const routes = async (server: FastifyInstance) => {
           }
         }
         const redirectUrl = request.query.state;
-        const sessionToken = await issueSession(user.id, uuidv4());
+        const sessionToken = issueSession(user.id, uuidv4());
         reply
-          .setCookie("dreamup_session", sessionToken, {
+          .setCookie(config.session.cookieName, sessionToken, {
             path: "/",
             httpOnly: true,
             secure: true,
-            sameSite: "strict",
+            sameSite: "lax",
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+          })
+          .redirect(redirectUrl);
+      }
+    );
+  }
+
+  // Set up discord Oauth2
+  if (config.idp.discord) {
+    server.register(oauthPlugin, {
+      name: "discordOAuth2",
+      credentials: {
+        client: {
+          id: config.idp.discord.clientId,
+          secret: config.idp.discord.clientSecret,
+        },
+        auth: oauthPlugin.DISCORD_CONFIGURATION,
+      },
+      startRedirectPath: config.idp.discord.redirectPath,
+      callbackUri: config.idp.discord.callbackUri,
+      scope: ["identify", "email"],
+      generateStateFunction: (
+        request: FastifyRequest<{ Querystring: { redirect: string } }>
+      ) => {
+        // get redirect from querystring
+        const { redirect } = request.query;
+        if (!redirect) {
+          throw new Error("No redirect URL provided");
+        }
+        return redirect;
+      },
+      checkStateFunction: (returnedState: string, callback: Function) =>
+        callback(),
+    });
+
+    server.get<{
+      Querystring: OAuthQueryString;
+      Response: any;
+    }>(
+      "/login/discord/callback",
+      {
+        schema: {
+          querystring: oauthQueryStringSchema,
+          response: {
+            200: {
+              type: "object",
+              additionalProperties: {
+                type: "string",
+              },
+            },
+          },
+        },
+      },
+      async (request, reply) => {
+        const { token } =
+          (await server.discordOAuth2.getAccessTokenFromAuthorizationCodeFlow(
+            request
+          )) as unknown as { token: DiscordToken };
+        // Fetch user info
+        const userInfo = await fetch(`${config.discord.apiHost}/users/@me`, {
+          headers: {
+            authorization: `Bearer ${token.access_token}`,
+          },
+        });
+        const userInfoJson = await userInfo.json();
+        const { id, email } = userInfoJson;
+        let user = await getUserByDiscordId(id, server.log);
+        if (!user) {
+          try {
+            user = await createOrUpdateUserByEmail(email, server.log, {
+              "idp:discord:id": id,
+            });
+          } catch (err: any) {
+            server.log.error(err);
+            return reply.status(500).send({
+              error: "Internal server error",
+            });
+          }
+        }
+        const redirectUrl = request.query.state;
+        const sessionToken = issueSession(user.id, uuidv4());
+        reply
+          .setCookie(config.session.cookieName, sessionToken, {
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000, // 1 day
           })
           .redirect(redirectUrl);
@@ -202,7 +297,7 @@ const routes = async (server: FastifyInstance) => {
 
 export default routes;
 
-export const issueSession = async (userId: string, sessionId: string) => {
+export const issueSession = (userId: string, sessionId: string) => {
   const token = jwt.sign(
     {
       userId,

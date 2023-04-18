@@ -57,9 +57,13 @@ export const createOrUpdateUserByEmail = async (
     ...extras,
   };
   const item = Item.fromObject(user);
-  if (item["idp:google:id"]?.N) {
-    item["idp:google:id"] = { S: item["idp:google:id"].N };
-  }
+  // Convert any idp id number values to strings
+  Object.keys(item)
+    .filter((key) => /^idp:\w+:id$/.test(key))
+    .filter((key) => !!item[key].N)
+    .forEach((key) => {
+      item[key] = { S: item[key].N };
+    });
   const command = new PutItemCommand({
     TableName: userTable,
     Item: item,
@@ -150,6 +154,28 @@ export const getUserByEmail = async (email: string, log: FastifyBaseLogger) => {
     },
     ExpressionAttributeValues: {
       ":email": { S: email },
+    },
+  });
+  const { Items } = await dynamodb.send(queryCmd);
+  if (Items && Items.length > 0) {
+    return Item.toObject(Items[0]);
+  }
+  return null;
+};
+
+export const getUserByDiscordId = async (
+  id: string,
+  log: FastifyBaseLogger
+) => {
+  const queryCmd = new QueryCommand({
+    TableName: userTable,
+    IndexName: "discord_id",
+    KeyConditionExpression: "#id = :id",
+    ExpressionAttributeNames: {
+      "#id": "idp:discord:id",
+    },
+    ExpressionAttributeValues: {
+      ":id": { S: id },
     },
   });
   const { Items } = await dynamodb.send(queryCmd);

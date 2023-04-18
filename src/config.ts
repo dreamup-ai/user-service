@@ -1,8 +1,6 @@
 import assert from "node:assert";
 import fs from "node:fs";
 import crypto from "node:crypto";
-import * as dotenv from "dotenv";
-dotenv.config({ override: true, path: `./.env.${process.env.APP_ENV}` });
 
 const {
   SD_Q_PREFIX = "sd-jobs_",
@@ -35,7 +33,12 @@ const {
   GOOGLE_CLIENT_SECRET,
   GOOGLE_REDIRECT_PATH = "/login/google",
   GOOGLE_CALLBACK_URI = "http://localhost:3000/login/google/callback",
-  // STATIC_DIR = "public",
+  DISCORD_CLIENT_ID,
+  DISCORD_CLIENT_SECRET,
+  DISCORD_REDIRECT_PATH = "/login/discord",
+  DISCORD_CALLBACK_URI = "http://localhost:3000/login/discord/callback",
+  DISCORD_API_HOST = "https://discord.com/api/v10",
+  DREAMUP_SESSION_COOKIE_NAME = "dreamup_session",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -93,6 +96,12 @@ type configType = {
       redirectPath: string;
       callbackUri: string;
     };
+    discord?: {
+      clientId: string;
+      clientSecret: string;
+      redirectPath: string;
+      callbackUri: string;
+    };
   };
   db: {
     userTable: string;
@@ -115,8 +124,11 @@ type configType = {
     publicKey: crypto.KeyObject;
     privateKey: crypto.KeyObject;
     duration: string;
+    cookieName: string;
   };
-  // staticDir: string;
+  discord: {
+    apiHost: string;
+  };
 };
 
 const config: configType = {
@@ -162,8 +174,11 @@ const config: configType = {
     publicKey: sessionPublicKey,
     privateKey: sessionPrivateKey,
     duration: SESSION_DURATION,
+    cookieName: DREAMUP_SESSION_COOKIE_NAME,
   },
-  // staticDir: STATIC_DIR,
+  discord: {
+    apiHost: DISCORD_API_HOST,
+  },
 };
 
 if (WEBHOOK_USER_CREATE) {
@@ -176,6 +191,15 @@ if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {
     clientSecret: GOOGLE_CLIENT_SECRET,
     redirectPath: GOOGLE_REDIRECT_PATH,
     callbackUri: GOOGLE_CALLBACK_URI,
+  };
+}
+
+if (DISCORD_CLIENT_ID && DISCORD_CLIENT_SECRET) {
+  config.idp.discord = {
+    clientId: DISCORD_CLIENT_ID,
+    clientSecret: DISCORD_CLIENT_SECRET,
+    redirectPath: DISCORD_REDIRECT_PATH,
+    callbackUri: DISCORD_CALLBACK_URI,
   };
 }
 
