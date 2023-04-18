@@ -6,7 +6,7 @@ import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
-import identityProviders from "./idp";
+import identityProviders from "./routes/idp";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import cookie from "@fastify/cookie";
 

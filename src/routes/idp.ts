@@ -1,13 +1,13 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import oauthPlugin, { OAuth2Namespace } from "@fastify/oauth2";
-import config from "./config";
+import config from "../config";
 import jwt from "jsonwebtoken";
 import {
   getUserByCognitoId,
   createOrUpdateUserByEmail,
   getUserByGoogleId,
   getUserByDiscordId,
-} from "./crud";
+} from "../crud";
 import { v4 as uuidv4 } from "uuid";
 import {
   oauthQueryStringSchema,
@@ -15,7 +15,7 @@ import {
   DiscordToken,
   GoogleToken,
   CognitoToken,
-} from "./types";
+} from "../types";
 
 declare module "fastify" {
   interface FastifyInstance {
