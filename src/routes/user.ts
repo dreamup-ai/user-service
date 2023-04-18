@@ -322,7 +322,6 @@ const routes = async (server: FastifyInstance) => {
       }
       const { userId } = user;
       const { body } = req;
-      console.log(body);
       try {
         const updatedUser = await updateUserById(userId, body);
         return updatedUser;

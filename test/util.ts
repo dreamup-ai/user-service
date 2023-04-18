@@ -86,7 +86,7 @@ export function sign(
 let server: FastifyInstance;
 export const getServer = async () => {
   if (!server) {
-    server = await build();
+    server = await build({ logger: false });
   }
   return server;
 };

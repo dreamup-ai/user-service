@@ -2,16 +2,14 @@ import * as dotenv from "dotenv";
 dotenv.config({ override: true, path: `./.env.${process.env.APP_ENV}` });
 import config from "./config";
 
-import Fastify, { FastifyInstance } from "fastify";
+import Fastify, { FastifyInstance, FastifyServerOptions } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import userRoutes from "./routes/user";
 import loginRoutes from "./routes/login";
 import cookie from "@fastify/cookie";
 
-export const build = async () => {
-  const server = Fastify({
-    logger: true,
-  }).withTypeProvider<JsonSchemaToTsProvider>();
+export const build = async (opts: FastifyServerOptions) => {
+  const server = Fastify(opts).withTypeProvider<JsonSchemaToTsProvider>();
 
   server.get(
     "/hc",

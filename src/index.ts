@@ -3,7 +3,7 @@ dotenv.config({ override: true, path: `./.env.${process.env.APP_ENV}` });
 
 import { start, build } from "./server";
 
-build()
+build({ logger: true })
   .then((server) => {
     start(server);
   })
