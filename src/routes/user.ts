@@ -29,7 +29,7 @@ const routes = async (server: FastifyInstance) => {
         return reply.status(401).send({ error: "Unauthorized" });
       }
       const { userId } = user;
-      const userRecord = await getUserById(userId, server.log);
+      const userRecord = await getUserById(userId);
       if (!userRecord) {
         return reply.status(401).send({ error: "Unauthorized" });
       }

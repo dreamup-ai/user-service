@@ -6,7 +6,7 @@ import Fastify, { FastifyInstance } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import cognitoRoutes from "./routes/cognito";
 import userRoutes from "./routes/user";
-import identityProviders from "./routes/idp";
+import loginRoutes from "./routes/login";
 import { IDatabaseTable, IQueueManager } from "interfaces";
 import cookie from "@fastify/cookie";
 
@@ -53,9 +53,9 @@ export const build = async (
 
   await server.register(cookie);
 
-  await server.register(identityProviders);
-  await server.register(cognitoRoutes, { userTable, queueManager });
-  await server.register(userRoutes, { userTable, queueManager });
+  await server.register(loginRoutes);
+  await server.register(cognitoRoutes);
+  await server.register(userRoutes);
 
   return server;
 };
