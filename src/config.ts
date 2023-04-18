@@ -39,6 +39,8 @@ const {
   DISCORD_CALLBACK_URI = "http://localhost:3000/login/discord/callback",
   DISCORD_API_HOST = "https://discord.com/api/v10",
   DREAMUP_SESSION_COOKIE_NAME = "dreamup_session",
+  DREAMUP_SESSION_COOKIE_DOMAIN = "localhost",
+  DREAMUP_IDP_COOKIE_NAME = "dreamup_idp",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -125,6 +127,8 @@ type configType = {
     privateKey: crypto.KeyObject;
     duration: string;
     cookieName: string;
+    cookieDomain: string;
+    idpCookieName: string;
   };
   discord: {
     apiHost: string;
@@ -175,6 +179,8 @@ const config: configType = {
     privateKey: sessionPrivateKey,
     duration: SESSION_DURATION,
     cookieName: DREAMUP_SESSION_COOKIE_NAME,
+    cookieDomain: DREAMUP_SESSION_COOKIE_DOMAIN,
+    idpCookieName: DREAMUP_IDP_COOKIE_NAME,
   },
   discord: {
     apiHost: DISCORD_API_HOST,

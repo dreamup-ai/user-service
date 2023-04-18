@@ -113,11 +113,20 @@ const routes = async (server: FastifyInstance) => {
       // and redirect to the redirect URL
       reply
         .setCookie(config.session.cookieName, sessionToken, {
+          domain: config.session.cookieDomain,
           path: "/",
           httpOnly: true,
           secure: true,
           sameSite: "lax",
           maxAge: 24 * 60 * 60 * 1000, // 1 day
+        })
+        .setCookie(config.session.idpCookieName, "cognito", {
+          domain: config.session.cookieDomain,
+          path: "/",
+          httpOnly: true,
+          secure: true,
+          sameSite: "lax",
+          maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
         })
         .redirect(redirectUrl);
     }
@@ -196,11 +205,20 @@ const routes = async (server: FastifyInstance) => {
         const sessionToken = issueSession(user.id, uuidv4());
         reply
           .setCookie(config.session.cookieName, sessionToken, {
+            domain: config.session.cookieDomain,
             path: "/",
             httpOnly: true,
             secure: true,
             sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000, // 1 day
+          })
+          .setCookie(config.session.idpCookieName, "google", {
+            domain: config.session.cookieDomain,
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
           })
           .redirect(redirectUrl);
       }
@@ -283,11 +301,20 @@ const routes = async (server: FastifyInstance) => {
         const sessionToken = issueSession(user.id, uuidv4());
         reply
           .setCookie(config.session.cookieName, sessionToken, {
+            domain: config.session.cookieDomain,
             path: "/",
             httpOnly: true,
             secure: true,
             sameSite: "lax",
             maxAge: 24 * 60 * 60 * 1000, // 1 day
+          })
+          .setCookie(config.session.idpCookieName, "discord", {
+            domain: config.session.cookieDomain,
+            path: "/",
+            httpOnly: true,
+            secure: true,
+            sameSite: "lax",
+            maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
           })
           .redirect(redirectUrl);
       }

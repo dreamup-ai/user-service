@@ -15,23 +15,25 @@ declare module "fastify" {
 export const makeSessionValidator = (publicKey: KeyObject) => {
   return async function sourceValidator(
     req: FastifyRequest,
-    res: FastifyReply
+    reply: FastifyReply
   ) {
     // Auth token can be in a cookie, or in the Authorization header as a bearer token
     const { authorization } = req.headers;
-    let token;
+    const { [config.session.idpCookieName]: idpCookie = "cognito" } =
+      req.cookies;
+    let token: string;
+    let code: number = 302;
     if (authorization) {
+      code = 401;
       const [authType, authToken] = authorization?.split(" ") ?? [null, null];
       if (authType.toLowerCase() !== "bearer") {
-        return res.redirect(401, `/login/cognito?redirect=${req.url}`);
+        return reply.status(code).send({ error: "Invalid authorization type" });
       }
       token = authToken;
     } else {
       const { [config.session.cookieName]: cookieToken } = req.cookies;
       if (!cookieToken) {
-        console.log("No cookie token");
-        console.log(req.cookies);
-        return res.redirect(401, `/login/cognito?redirect=${req.url}`);
+        return reply.redirect(code, `/login/${idpCookie}?redirect=${req.url}`);
       }
       token = cookieToken;
     }
@@ -50,7 +52,10 @@ export const makeSessionValidator = (publicKey: KeyObject) => {
       req.user = { userId, sessionId };
     } catch (e: any) {
       console.error(e);
-      return res.redirect(401, `/login/cognito?redirect=${req.url}`);
+      if (code === 401) {
+        return reply.status(code).send({ error: e.message });
+      }
+      return reply.redirect(code, `/login/${idpCookie}?redirect=${req.url}`);
     }
   };
 };
