@@ -54,7 +54,7 @@ export const createOrUpdateUserByEmail = async (
     created: Date.now(),
     preferences: {},
     features: {},
-    _queue: `${config.queue.sd_prefix}${id}`,
+    _queue: `${config.queue.sd_prefix}${id}.fifo`,
     ...extras,
   };
   const item = Item.fromObject(user);
@@ -74,9 +74,17 @@ export const createOrUpdateUserByEmail = async (
 
     // Only create the queue if the user doesn't already exist
     try {
-      await queueManager.createQueue(user._queue);
+      const dlq = await queueManager.createQueue(`dlq-${user._queue}`, {
+        fifo: true,
+      });
+      await queueManager.createQueue(user._queue, {
+        deadLetterQueue: dlq.name,
+        fifo: true,
+      });
     } catch (e: any) {
-      console.log(e);
+      if (e.code !== "QueueAlreadyExists") {
+        throw e;
+      }
     }
   } catch (err: any) {
     if (err.code === "ConditionalCheckFailedException") {
@@ -238,7 +246,11 @@ export const getUpdateExpressionForArbitrarilyNestedUpdate = (data: any) => {
   };
 };
 
-export const updateUserById = async (id: string, data: any) => {
+export const updateUserById = async (
+  id: string,
+  data: any,
+  log: FastifyBaseLogger
+) => {
   const updateParams = {
     TableName: userTable,
     Key: {
@@ -252,6 +264,8 @@ export const updateUserById = async (id: string, data: any) => {
   const updateCmd = new UpdateItemCommand(updateParams);
   try {
     const { Attributes } = await dynamodb.send(updateCmd);
+    const user = Item.toObject(Attributes);
+    sendWebhook("user.updated", user, log);
     return Item.toObject(Attributes);
   } catch (e: any) {
     if (e.name === "ConditionalCheckFailedException") {
@@ -261,12 +275,31 @@ export const updateUserById = async (id: string, data: any) => {
   }
 };
 
-export const deleteUserById = async (id: string) => {
+export const deleteUserById = async (id: string, log: FastifyBaseLogger) => {
   const deleteCmd = new DeleteItemCommand({
     TableName: userTable,
     Key: {
       id: { S: id },
     },
+    ReturnValues: "ALL_OLD",
+    ConditionExpression: "attribute_exists(id)",
   });
-  await dynamodb.send(deleteCmd);
+  try {
+    const { Attributes } = await dynamodb.send(deleteCmd);
+    if (Attributes) {
+      const user = Item.toObject(Attributes);
+      const [userQueue, dlq] = await Promise.all([
+        queueManager.getQueue(user._queue),
+        queueManager.getQueue(`dlq-${user._queue}`),
+      ]);
+      await Promise.all([userQueue.delete(), dlq.delete()]);
+      sendWebhook("user.deleted", user, log);
+      return user;
+    }
+  } catch (e: any) {
+    if (e.name === "ConditionalCheckFailedException") {
+      return null;
+    }
+    throw e;
+  }
 };

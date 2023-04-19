@@ -48,7 +48,7 @@ const routes = (server: FastifyInstance, _: any, done: Function) => {
       const { userId } = user;
       const { body } = req;
       try {
-        const updatedUser = await updateUserById(userId, body);
+        const updatedUser = await updateUserById(userId, body, server.log);
         if (!updatedUser) {
           return reply.status(500).send({ error: "Unable to update user" });
         }
@@ -88,7 +88,7 @@ const routes = (server: FastifyInstance, _: any, done: Function) => {
       const { id } = req.params;
       const { body } = req;
       try {
-        const updatedUser = await updateUserById(id, body);
+        const updatedUser = await updateUserById(id, body, server.log);
         if (!updatedUser) {
           return reply.status(404).send({ error: "User Not Found" });
         }

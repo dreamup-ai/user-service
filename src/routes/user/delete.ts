@@ -1,14 +1,17 @@
 import { FastifyInstance } from "fastify";
+import config from "../../config";
 import {
   DeletedResponse,
   IdParam,
   SignatureHeader,
   deletedResponseSchema,
+  errorResponseSchema,
   idParamSchema,
   signatureHeaderSchema,
 } from "../../types";
 import { dreamupInternal } from "../../middleware/audiences";
 import { deleteUserById } from "../../crud";
+import { queueManager } from "../../clients/queue";
 
 const routes = (server: FastifyInstance, _: any, done: Function) => {
   server.delete<{
@@ -23,6 +26,8 @@ const routes = (server: FastifyInstance, _: any, done: Function) => {
         headers: signatureHeaderSchema,
         response: {
           200: deletedResponseSchema,
+          404: errorResponseSchema,
+          500: errorResponseSchema,
         },
       },
       preValidation: [dreamupInternal],
@@ -30,7 +35,10 @@ const routes = (server: FastifyInstance, _: any, done: Function) => {
     async (req, reply) => {
       const { id } = req.params;
       try {
-        await deleteUserById(id);
+        const user = await deleteUserById(id, server.log);
+        if (!user) {
+          return reply.status(404).send({ error: "User not found" });
+        }
         return { deleted: true };
       } catch (e: any) {
         server.log.error(e);
