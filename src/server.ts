@@ -4,13 +4,55 @@ import config from "./config";
 
 import Fastify, { FastifyInstance, FastifyServerOptions } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
+import cookie from "@fastify/cookie";
 import userRoutes from "./routes/user";
 import loginRoutes from "./routes/login";
 import keyRoutes from "./routes/jwk";
-import cookie from "@fastify/cookie";
+import { rawUserSchema } from "./types";
 
 export const build = async (opts: FastifyServerOptions) => {
   const server = Fastify(opts).withTypeProvider<JsonSchemaToTsProvider>();
+
+  await server.register(require("@fastify/swagger"), {
+    routePrefix: "/docs",
+    exposeRoute: true,
+    mode: "dynamic",
+    openapi: {
+      openapi: "3.0.3",
+      info: {
+        title: "Dreamup User API",
+        description: "API for Dreamup User Management",
+        version: "0.9.0",
+      },
+      webhooks: {
+        "user.created": {
+          description: "User created",
+          post: {
+            requestBody: {
+              description: "User created",
+              content: {
+                "application/json": {
+                  schema: rawUserSchema,
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description: "Return a 200 status to acknowledge the webhook",
+              },
+            },
+          },
+        },
+      },
+
+      servers: [{ url: config.server.publicUrl }],
+    },
+    hideUntagged: false,
+  });
+  await server.register(require("@fastify/swagger-ui"), {
+    routePrefix: "/docs",
+    exposeRoute: true,
+  });
 
   server.get(
     "/hc",
@@ -46,11 +88,11 @@ export const build = async (opts: FastifyServerOptions) => {
   });
 
   server.register(cookie);
-
   server.register(loginRoutes);
   server.register(userRoutes);
   server.register(keyRoutes);
 
+  await server.ready();
   return server;
 };
 

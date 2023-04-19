@@ -41,6 +41,7 @@ const {
   DREAMUP_SESSION_COOKIE_NAME = "dreamup_session",
   DREAMUP_SESSION_COOKIE_DOMAIN = "localhost",
   DREAMUP_IDP_COOKIE_NAME = "dreamup_idp",
+  PUBLIC_URL = "http://localhost:3000",
 } = process.env;
 
 assert(COGNITO_USER_POOL_ID, "COGNITO_USER_POOL_ID is required");
@@ -114,6 +115,7 @@ type configType = {
   server: {
     port: number;
     host: string;
+    publicUrl: string;
   };
   webhooks: {
     events: {
@@ -169,6 +171,7 @@ const config: configType = {
   server: {
     port: Number(PORT || 3000),
     host: HOST,
+    publicUrl: PUBLIC_URL,
   },
   webhooks: {
     events: {},

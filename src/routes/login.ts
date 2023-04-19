@@ -37,6 +37,22 @@ declare module "jsonwebtoken" {
   }
 }
 
+const authRedirectSchema = {
+  type: "string",
+  description:
+    "Redirects to the redirect URL provided to the login endpoint, and sets a session cookie and an IDP cookie",
+  headers: {
+    "Set-Cookie": {
+      type: "string",
+      description: "A session cookie named `dreamup_session`",
+    },
+    "\u200BSet-Cookie": {
+      type: "string",
+      description: "An idp cookie named `dreamup_idp`",
+    },
+  },
+} as const;
+
 const routes = async (server: FastifyInstance) => {
   server.register(oauthPlugin, {
     name: "cognitoOAuth2",
@@ -76,6 +92,9 @@ const routes = async (server: FastifyInstance) => {
     {
       schema: {
         querystring: oauthQueryStringSchema,
+        response: {
+          302: authRedirectSchema,
+        },
       },
     },
     async (request, reply) => {
@@ -162,19 +181,13 @@ const routes = async (server: FastifyInstance) => {
 
     server.get<{
       Querystring: OAuthQueryString;
-      Response: any;
     }>(
       "/login/google/callback",
       {
         schema: {
           querystring: oauthQueryStringSchema,
           response: {
-            200: {
-              type: "object",
-              additionalProperties: {
-                type: "string",
-              },
-            },
+            302: authRedirectSchema,
           },
         },
       },
@@ -255,19 +268,13 @@ const routes = async (server: FastifyInstance) => {
 
     server.get<{
       Querystring: OAuthQueryString;
-      Response: any;
     }>(
       "/login/discord/callback",
       {
         schema: {
           querystring: oauthQueryStringSchema,
           response: {
-            200: {
-              type: "object",
-              additionalProperties: {
-                type: "string",
-              },
-            },
+            302: authRedirectSchema,
           },
         },
       },
