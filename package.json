@@ -7,7 +7,8 @@
     "test": "npm run build && APP_ENV=test mocha --require dist/test/env.js --recursive dist/test",
     "build": "tsc",
     "start": "APP_ENV=local node dist/src/index.js",
-    "init-local": "docker compose up --detach && APP_ENV=local npx run-func dist/init-local-dynamo.js createTable"
+    "init-local": "docker compose -f dependencies.yml up --detach && APP_ENV=local npx run-func dist/init-local-dynamo.js createTable",
+    "compose": "./scripts/run"
   },
   "repository": {
     "type": "git",
@@ -21,6 +22,7 @@
     "@fastify/cookie": "^8.3.0",
     "@fastify/oauth2": "^7.0.1",
     "@fastify/type-provider-json-schema-to-ts": "^2.2.2",
+    "dotenv": "^16.0.3",
     "dynamo-tools": "github:shawnrushefsky/dynamo-tools",
     "fastify": "^4.15.0",
     "interfaces": "github:dreamup-ai/interfaces",
@@ -37,8 +39,8 @@
     "@types/sinon": "^10.0.13",
     "@types/uuid": "^9.0.1",
     "chai": "^4.3.7",
-    "dotenv": "^16.0.3",
     "mocha": "^10.2.0",
-    "sinon": "^15.0.3"
+    "sinon": "^15.0.3",
+    "typescript": "^5.0.4"
   }
 }

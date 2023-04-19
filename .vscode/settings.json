@@ -1,0 +1,8 @@
+{
+  "yaml.schemas": {
+    "https://raw.githubusercontent.com/compose-spec/compose-spec/master/schema/compose-spec.json": [
+      "file:///home/shawnrushefsky/code/dreamup-ai/user-service/user-service.yml",
+      "file:///home/shawnrushefsky/code/dreamup-ai/user-service/dependencies.yml"
+    ]
+  }
+}

@@ -11,7 +11,7 @@ const {
   DYNAMODB_ENDPOINT,
   USER_TABLE,
   PORT,
-  WEBHOOK_USER_CREATE,
+  HOST = "localhost",
   WEBHOOK_PUBLIC_KEY_PATH,
   WEBHOOK_PRIVATE_KEY_PATH,
   WEBHOOK_SIG_HEADER = "x-dreamup-signature",
@@ -113,10 +113,11 @@ type configType = {
   };
   server: {
     port: number;
+    host: string;
   };
   webhooks: {
     events: {
-      [x: string]: string;
+      [x: string]: string[];
     };
     publicKey: crypto.KeyObject;
     privateKey: crypto.KeyObject;
@@ -167,6 +168,7 @@ const config: configType = {
   },
   server: {
     port: Number(PORT || 3000),
+    host: HOST,
   },
   webhooks: {
     events: {},
@@ -187,8 +189,25 @@ const config: configType = {
   },
 };
 
-if (WEBHOOK_USER_CREATE) {
-  config.webhooks.events["user.create"] = WEBHOOK_USER_CREATE;
+const userCreateHooks = Object.keys(process.env)
+  .filter((x) => x.startsWith("WEBHOOK_USER_CREATE") && process.env[x])
+  .map((x) => process.env[x]) as string[];
+if (userCreateHooks.length > 0) {
+  config.webhooks.events["user.create"] = userCreateHooks;
+}
+
+const userUpdateHooks = Object.keys(process.env)
+  .filter((x) => x.startsWith("WEBHOOK_USER_UPDATE") && process.env[x])
+  .map((x) => process.env[x]) as string[];
+if (userUpdateHooks.length > 0) {
+  config.webhooks.events["user.update"] = userUpdateHooks;
+}
+
+const userDeleteHooks = Object.keys(process.env)
+  .filter((x) => x.startsWith("WEBHOOK_USER_DELETE") && process.env[x])
+  .map((x) => process.env[x]) as string[];
+if (userDeleteHooks.length > 0) {
+  config.webhooks.events["user.delete"] = userDeleteHooks;
 }
 
 if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET) {

@@ -16,24 +16,36 @@ export const sendWebhook = async (
   data: any,
   log: FastifyBaseLogger
 ) => {
-  if (!config.webhooks.events[event]) {
+  if (
+    !config.webhooks.events[event] ||
+    config.webhooks.events[event].length === 0
+  ) {
     return;
   }
   try {
     const body = JSON.stringify({ event, payload: data });
     const signature = sign(body);
-    const response = await fetch(config.webhooks.events[event], {
-      method: "POST",
-      body,
-      headers: {
-        "Content-Type": "application/json",
-        [config.webhooks.signatureHeader]: signature,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(
-        `Webhook "${event}" failed with status ${response.status}: ${response.statusText}`
-      );
+    const responses = await Promise.allSettled(
+      config.webhooks.events[event].map((url) =>
+        fetch(url, {
+          method: "POST",
+          body,
+          headers: {
+            "Content-Type": "application/json",
+            [config.webhooks.signatureHeader]: signature,
+          },
+        })
+      )
+    );
+    const failures = responses.filter(
+      (response) => response.status == "rejected"
+    ) as PromiseRejectedResult[];
+    if (failures.length > 0) {
+      failures.forEach((failure) => {
+        log.error(
+          `Webhook "${event}" failed to post to ${failure.reason.url} with status ${failure.reason.status}: ${failure.reason.statusText}`
+        );
+      });
     }
   } catch (e: any) {
     log.error(`Webhook "${event}" failed: ${e.message}`);

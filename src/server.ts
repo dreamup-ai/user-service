@@ -6,6 +6,7 @@ import Fastify, { FastifyInstance, FastifyServerOptions } from "fastify";
 import { JsonSchemaToTsProvider } from "@fastify/type-provider-json-schema-to-ts";
 import userRoutes from "./routes/user";
 import loginRoutes from "./routes/login";
+import keyRoutes from "./routes/jwk";
 import cookie from "@fastify/cookie";
 
 export const build = async (opts: FastifyServerOptions) => {
@@ -48,13 +49,14 @@ export const build = async (opts: FastifyServerOptions) => {
 
   server.register(loginRoutes);
   server.register(userRoutes);
+  server.register(keyRoutes);
 
   return server;
 };
 
 export const start = async (server: FastifyInstance) => {
   try {
-    await server.listen({ port: config.server.port });
+    await server.listen({ port: config.server.port, host: config.server.host });
   } catch (e) {
     server.log.error(e);
     process.exit(1);
