@@ -43,6 +43,42 @@ export const build = async (opts: FastifyServerOptions) => {
             },
           },
         },
+        "user.updated": {
+          description: "User updated",
+          post: {
+            requestBody: {
+              description: "Updated User",
+              content: {
+                "application/json": {
+                  schema: rawUserSchema,
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description: "Return a 200 status to acknowledge the webhook",
+              },
+            },
+          },
+        },
+        "user.deleted": {
+          description: "User deleted",
+          post: {
+            requestBody: {
+              description: "Deleted User",
+              content: {
+                "application/json": {
+                  schema: rawUserSchema,
+                },
+              },
+            },
+            responses: {
+              "200": {
+                description: "Return a 200 status to acknowledge the webhook",
+              },
+            },
+          },
+        },
       },
 
       servers: [{ url: config.server.publicUrl }],

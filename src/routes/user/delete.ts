@@ -1,5 +1,4 @@
 import { FastifyInstance } from "fastify";
-import config from "../../config";
 import {
   DeletedResponse,
   IdParam,
@@ -11,7 +10,6 @@ import {
 } from "../../types";
 import { dreamupInternal } from "../../middleware/audiences";
 import { deleteUserById } from "../../crud";
-import { queueManager } from "../../clients/queue";
 
 const routes = (server: FastifyInstance, _: any, done: Function) => {
   server.delete<{
@@ -39,7 +37,7 @@ const routes = (server: FastifyInstance, _: any, done: Function) => {
         if (!user) {
           return reply.status(404).send({ error: "User not found" });
         }
-        return { deleted: true };
+        return { deleted: true, id };
       } catch (e: any) {
         server.log.error(e);
         return reply.status(500).send({ error: "Unable to delete user" });
