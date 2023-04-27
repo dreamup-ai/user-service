@@ -1,6 +1,6 @@
 {
   "name": "user-service",
-  "version": "1.0.0",
+  "version": "0.9.0",
   "description": "A service for managing users and user sessions in dreamup ai",
   "main": "src/index.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "APP_ENV=local node dist/src/index.js",
     "init-local": "docker compose -f dependencies.yml up --detach && APP_ENV=local npx run-func dist/init-local-dynamo.js createTable",
-    "compose": "./scripts/run"
+    "compose-up": "./scripts/run",
+    "compose-down": "./scripts/down"
   },
   "repository": {
     "type": "git",

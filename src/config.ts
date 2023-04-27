@@ -2,6 +2,8 @@ import assert from "node:assert";
 import fs from "node:fs";
 import crypto from "node:crypto";
 
+import { version } from "../package.json";
+
 const {
   SD_Q_PREFIX = "sd-jobs_",
   AWS_REGION,
@@ -116,6 +118,7 @@ type configType = {
     port: number;
     host: string;
     publicUrl: string;
+    version: string;
   };
   webhooks: {
     events: {
@@ -172,6 +175,7 @@ const config: configType = {
     port: Number(PORT || 3000),
     host: HOST,
     publicUrl: PUBLIC_URL,
+    version,
   },
   webhooks: {
     events: {},
