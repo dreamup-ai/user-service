@@ -22,7 +22,7 @@ export const build = async (opts: FastifyServerOptions) => {
       info: {
         title: "Dreamup User API",
         description: "API for Dreamup User Management",
-        version: "0.9.0",
+        version: config.server.version,
       },
       webhooks: {
         "user.created": {
