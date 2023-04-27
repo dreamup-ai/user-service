@@ -87,7 +87,7 @@ export const createOrUpdateUserByEmail = async (
       }
     }
   } catch (err: any) {
-    if (err.code === "ConditionalCheckFailedException") {
+    if (err.name === "ConditionalCheckFailedException") {
       log.warn(`User ${email} already exists in database, skipping creation`);
     } else {
       throw err;
