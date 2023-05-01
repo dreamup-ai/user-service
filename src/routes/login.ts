@@ -53,7 +53,48 @@ const authRedirectSchema = {
   },
 } as const;
 
+const loginRedirectSchema = {
+  type: "string",
+  description:
+    "Uses the idp cookie to redirect the user to the correct login endpoint",
+} as const;
+
 const routes = async (server: FastifyInstance) => {
+  server.get<{
+    Querystring: { redirect: string };
+    Headers: { cookie?: string };
+  }>(
+    "/login",
+    {
+      schema: {
+        querystring: {
+          type: "object",
+          properties: {
+            redirect: {
+              type: "string",
+              description: "The URL to redirect to after login",
+            },
+          },
+          required: ["redirect"],
+        },
+        response: {
+          302: loginRedirectSchema,
+        },
+      },
+    },
+    async (request, reply) => {
+      const { redirect } = request.query;
+      if (!redirect) {
+        throw new Error("No redirect URL provided");
+      }
+      let idp = request.cookies[config.session.idpCookieName];
+      if (!idp) {
+        idp = "cognito";
+      }
+
+      reply.redirect(`/login/${idp}?redirect=${redirect}`);
+    }
+  );
   server.register(oauthPlugin, {
     name: "cognitoOAuth2",
     credentials: {
