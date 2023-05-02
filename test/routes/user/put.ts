@@ -78,7 +78,7 @@ describe("PUT /user/me", () => {
     });
   });
 
-  it("should return 302 if request is submitted with an invalid cookie", async () => {
+  it("should return 307 if request is submitted with an invalid cookie", async () => {
     const response = await server.inject({
       method: "PUT",
       url: "/user/me",
@@ -95,7 +95,7 @@ describe("PUT /user/me", () => {
         [config.session.cookieName]: "invalid",
       },
     });
-    expect(response.statusCode).to.equal(302);
+    expect(response.statusCode).to.equal(307);
   });
 
   it("should return 401 if request is submitted with an invalid auth header", async () => {

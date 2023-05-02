@@ -78,7 +78,7 @@ const routes = async (server: FastifyInstance) => {
           required: ["redirect"],
         },
         response: {
-          302: loginRedirectSchema,
+          307: loginRedirectSchema,
         },
       },
     },
@@ -134,7 +134,7 @@ const routes = async (server: FastifyInstance) => {
       schema: {
         querystring: oauthQueryStringSchema,
         response: {
-          302: authRedirectSchema,
+          307: authRedirectSchema,
         },
       },
     },
@@ -228,7 +228,7 @@ const routes = async (server: FastifyInstance) => {
         schema: {
           querystring: oauthQueryStringSchema,
           response: {
-            302: authRedirectSchema,
+            307: authRedirectSchema,
           },
         },
       },
@@ -315,7 +315,7 @@ const routes = async (server: FastifyInstance) => {
         schema: {
           querystring: oauthQueryStringSchema,
           response: {
-            302: authRedirectSchema,
+            307: authRedirectSchema,
           },
         },
       },
