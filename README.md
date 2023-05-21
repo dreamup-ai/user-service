@@ -39,7 +39,7 @@ This project uses `dotenv` to read environment files. Multi-environment setups a
 # Build the project
 npm run build
 
-# Make sure dynamo is up, the user-service is up, and the user table is created
+# Make sure dynamo is up, the user-service is up, and the pipeline table is created
 npm run init-local
 
 # Start the server
