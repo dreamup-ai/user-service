@@ -20,6 +20,21 @@ npm install
 npm run build
 ```
 
+### Run Tests
+
+The tests depend on the services defined in `dependencies.yml`, in this case DynamoDB local.
+
+```shell
+# Start DynamoDB Local
+docker compose -f dependencies.yml up --detach
+
+# install dependencies
+npm install
+
+# Run Tests
+npm test
+```
+
 ### Run Locally
 
 This project uses `dotenv` to read environment files. Multi-environment setups are supported via the environment variable `APP_ENV`. On start, the server will load `.env.${APP_ENV}`. The `start` script and the `user-service.yml` file both assume `APP_ENV=local`, so you will need to create a file in the root of the directory called `.env.local`. For most purposes, copying `.env.test` should be sufficient. The `.gitignore` contains a rule to ignore `.env*.local` files.
