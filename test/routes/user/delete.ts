@@ -33,6 +33,7 @@ describe("DELETE /user/:id", () => {
     expect(response.statusCode).to.equal(200);
     expect(response.json()).to.deep.equal({
       deleted: true,
-    });
+      id: user.id
+    })
   });
 });
