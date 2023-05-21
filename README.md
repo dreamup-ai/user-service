@@ -1,3 +1,12 @@
+<p align="center">
+  <a href="https://github.com/dreamup-ai/user-service/actions/workflows/dockerhub-build-push.yml"><img src="https://img.shields.io/github/actions/workflow/status/dreamup-ai/user-service/dockerhub-build-push.yml?label=dockerhub-build-push&logo=github&style=plastic" alt="github workflow status"></a>
+  <a href="https://github.com/dreamup-ai/user-service/actions/workflows/dockerhub-description.yml"><img src="https://img.shields.io/github/actions/workflow/status/dreamup-ai/user-service/dockerhub-description.yml?label=dockerhub-readme&logo=github&style=plastic" alt="github workflow status"></a>
+  <!-- run-tests workflow to be added soon -->
+  <!-- <a href="https://github.com/dreamup-ai/user-service/actions/workflows/run-tests.yml"><img src="https://img.shields.io/github/actions/workflow/status/dreamup-ai/user-service/run-tests.yml?label=run-tests&logo=github&style=plastic" alt="github workflow status"></a> -->
+  <a href="https://hub.docker.com/r/dreamupai/user-service"><img src="https://img.shields.io/docker/v/dreamupai/user-service?label=dockerhub&logo=docker&sort=date&style=plastic" alt="dockerhub image version"></a>
+  <a href="https://github.com/dreamup-ai/user-service"><img src="https://img.shields.io/github/package-json/v/dreamup-ai/user-service?color=purple&label=release version&style=plastic" alt="release version"></a>
+</p>
+
 # user-service
 A service for managing users in dreamup
 
@@ -30,7 +39,7 @@ This project uses `dotenv` to read environment files. Multi-environment setups a
 # Build the project
 npm run build
 
-# Make sure dynamo is up, the user-service is up, and the pipeline table is created
+# Make sure dynamo is up, the user-service is up, and the user table is created
 npm run init-local
 
 # Start the server
